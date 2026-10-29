@@ -1,0 +1,8 @@
+{"timestamp": "2026-10-29T08:00:01Z", "level": "INFO", "service": "auth-service", "message": "Service started on port 3000"}
+{"timestamp": "2026-10-29T08:01:10Z", "level": "INFO", "service": "auth-service", "client_ip": "192.168.1.45", "message": "User alice successful login"}
+{"timestamp": "2026-10-29T08:02:15Z", "level": "WARN", "service": "auth-service", "client_ip": "10.0.0.99", "message": "FAILED LOGIN for user admin - incorrect password"}
+{"timestamp": "2026-10-29T08:02:18Z", "level": "WARN", "service": "auth-service", "client_ip": "10.0.0.99", "message": "FAILED LOGIN for user admin - incorrect password"}
+{"timestamp": "2026-10-29T08:02:22Z", "level": "WARN", "service": "auth-service", "client_ip": "10.0.0.99", "message": "FAILED LOGIN for user root - invalid credentials"}
+{"timestamp": "2026-10-29T08:03:00Z", "level": "ERROR", "service": "billing-service", "message": "Database connection pool exhausted: timeout connecting to postgresql:5432"}
+{"timestamp": "2026-10-29T08:04:12Z", "level": "FATAL", "service": "worker-pool", "message": "Unhandled kernel panic or out-of-memory worker termination"}
+{"timestamp": "2026-10-29T08:05:00Z", "level": "INFO", "service": "monitor", "message": "Health check complete"}

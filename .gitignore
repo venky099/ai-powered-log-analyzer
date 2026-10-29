@@ -1,0 +1,35 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment and sensitive files
+.env
+*.env.local
+*.secret
+*.pem
+*.key
+
+# Reports containing potentially sensitive analysis data
+reports/
+*.report.txt
+
+# Editor and IDE configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS temporary files
+.DS_Store
+Thumbs.db
