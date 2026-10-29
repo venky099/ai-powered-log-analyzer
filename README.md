@@ -131,7 +131,7 @@ Detailed architectural specifications and component boundaries are documented in
 
 1. **Clone repository & navigate into folder:**
    ```bash
-   git clone https://github.com/your-username/ai-powered-log-analyzer.git
+   git clone https://github.com/venky099/ai-powered-log-analyzer.git
    cd ai-powered-log-analyzer
    ```
 
@@ -284,6 +284,6 @@ git init
 git add .
 git commit -m "feat: initial commit of ai-powered-log-analyzer"
 git branch -M main
-git remote add origin https://github.com/your-username/ai-powered-log-analyzer.git
+git remote add origin https://github.com/venky099/ai-powered-log-analyzer.git
 git push -u origin main
 ```
