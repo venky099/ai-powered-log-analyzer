@@ -2,17 +2,17 @@
 
 ## Overview
 
-The **AI-Powered Log Analyzer** is a defensive, privacy-preserving log investigation workbench designed to assist systems engineers, security analysts, and developers in rapidly triaging application and server logs without sending sensitive data to third-party cloud APIs.
+The **AI-Powered Log Analyzer** is a defensive, privacy-conscious log investigation workbench designed to assist systems engineers, security analysts, and developers in rapidly triaging application and server logs. It pairs deterministic, explainable rule detection with **Google Gemini AI** executive synthesis and a zero-failure deterministic fallback engine.
 
 ```mermaid
 flowchart TD
-    A[User Log File / .log, .txt] --> B[Log Ingestion & Parsing\nsrc/log_parser.py]
+    A[User Log File / .log, .txt, .jsonl] --> B[Log Ingestion & Parsing\nsrc/log_parser.py]
     B --> C[Detection Engine\nsrc/detectors.py]
     B --> D[Metrics Aggregation\nsrc/analyzer.py]
     C --> D
-    D --> E{Ollama Available?}
-    E -- Yes --> F[Local AI Inference\nsrc/ai_summarizer.py\nllama3.2:1b]
-    E -- No --> G[Deterministic Rule-Based\nExecutive Fallback]
+    D --> E{Gemini API Configured?}
+    E -- Yes --> F[Google Gemini AI\nsrc/ai_summarizer.py\ngemini-2.5-flash]
+    E -- No / Error --> G[Deterministic Rule-Based\nExecutive Fallback]
     F --> H[Interactive Dashboard\napp.py Streamlit]
     G --> H
     H --> I[Sanitized CSV Export\nsrc/report_generator.py]
@@ -45,10 +45,11 @@ flowchart TD
    - Provides multi-dimensional filtering (by severity, category, or free-text keywords).
    - Bundles verified evidence into structured contexts for AI summarization.
 
-4. **Local AI Executive Summarization (`src/ai_summarizer.py`)**
+4. **AI Executive Summarization (`src/ai_summarizer.py`)**
    - **Prompt Injection Defense:** Encapsulates findings inside `<log_evidence>` tags with explicit defensive system prompts warning the model to treat all log entries as untrusted data.
-   - **Bounded Context:** Supplies top findings and metric aggregates rather than dumping raw multi-megabyte log files into the model context.
-   - **Offline Resilience:** If Ollama is offline or the model is not yet pulled, automatically generates a comprehensive deterministic executive summary with identical sections and zero service degradation.
+   - **Bounded Context:** Supplies top findings (up to 15) and metric aggregates rather than dumping raw multi-megabyte log files into the model context.
+   - **Google Gemini API:** Integrates using the official `google-genai` SDK (`gemini-2.5-flash`, `gemini-1.5-flash`, etc.) for fast, accurate threat and incident synthesis.
+   - **Graceful Fallback:** If the API key is unconfigured, rate-limited, or offline, automatically generates a comprehensive deterministic executive summary with identical sections and zero service degradation.
 
 5. **Reporting & Presentation (`src/report_generator.py` & `app.py`)**
    - **Streamlit Interface:** Responsive dashboard with metrics cards, filterable tables, and evidence expanders.

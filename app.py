@@ -2,7 +2,7 @@
 
 A modern, defensive log analysis dashboard featuring glassmorphism cards,
 cybersecurity typography (Plus Jakarta Sans & JetBrains Mono), visual Altair
-distributions, structured JSON-lines support, and local Ollama AI summarization.
+distributions, structured JSON-lines support, and Google Gemini AI summarization.
 """
 
 from __future__ import annotations
@@ -15,15 +15,22 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from src.ai_summarizer import OllamaSummarizer
+from src.ai_summarizer import GeminiSummarizer, OllamaSummarizer
 from src.analyzer import AnalysisResult, LogAnalyzer
 from src.report_generator import generate_csv_report, generate_text_report
 
 # Configuration defaults
 DEFAULT_MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "2"))
 DEFAULT_FAILED_LOGIN_THRESHOLD = int(os.getenv("FAILED_LOGIN_THRESHOLD", "3"))
-DEFAULT_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
+DEFAULT_GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_POPULAR_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-3.8-pro",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "Custom...",
+]
 SAMPLE_LOG_PATH = Path(__file__).parent / "sample_logs" / "sample.log"
 SAMPLE_JSON_PATH = Path(__file__).parent / "sample_logs" / "sample_json.jsonl"
 
@@ -515,21 +522,40 @@ def main():
     st.sidebar.markdown(
         """
         <div style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; letter-spacing: 0.06em; text-transform: uppercase; margin: 10px 0 6px 0;">
-            Local AI Engine
+            Gemini AI Engine
         </div>
         """,
         unsafe_allow_html=True,
     )
-    ollama_host = st.sidebar.text_input("Ollama Endpoint", value=DEFAULT_OLLAMA_HOST)
-    ollama_model = st.sidebar.text_input("Model Name", value=DEFAULT_OLLAMA_MODEL)
+    gemini_api_key = st.sidebar.text_input(
+        "Gemini API Key",
+        value=DEFAULT_GEMINI_API_KEY,
+        type="password",
+        help="Enter your Google AI Studio Gemini API key or set GEMINI_API_KEY in .env",
+    )
 
-    summarizer = OllamaSummarizer(host=ollama_host, model=ollama_model)
-    ollama_ok, _ = summarizer.check_ollama_status()
-
-    if ollama_ok:
-        st.sidebar.success(f"🟢 Ollama Ready ({ollama_model})")
+    model_default_idx = (
+        GEMINI_POPULAR_MODELS.index(DEFAULT_GEMINI_MODEL)
+        if DEFAULT_GEMINI_MODEL in GEMINI_POPULAR_MODELS[:-1]
+        else 0
+    )
+    selected_model = st.sidebar.selectbox(
+        "Model Identifier",
+        GEMINI_POPULAR_MODELS,
+        index=model_default_idx,
+    )
+    if selected_model == "Custom...":
+        gemini_model = st.sidebar.text_input("Custom Model", value=DEFAULT_GEMINI_MODEL)
     else:
-        st.sidebar.info("⚪ Ollama Offline (Fallback active)")
+        gemini_model = selected_model
+
+    summarizer = GeminiSummarizer(api_key=gemini_api_key, model=gemini_model)
+    gemini_ok, _ = summarizer.check_gemini_status(validate_online=False)
+
+    if gemini_ok:
+        st.sidebar.success(f"🟢 Gemini Ready ({gemini_model})")
+    else:
+        st.sidebar.info("⚪ API Key Required (Fallback active)")
 
     # Data ingestion handlers
     if load_sample_text and SAMPLE_LOG_PATH.exists():
@@ -573,7 +599,7 @@ def main():
         <div class="top-navbar">
             <div style="display: flex; align-items: center; gap: 14px;">
                 <h1 class="brand-title">AI Log Analyzer</h1>
-                <span class="badge-pill">Air-Gapped & Private</span>
+                <span class="badge-pill">Google Gemini Powered</span>
                 {status_badge}
             </div>
             <div style="font-size: 0.82rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">
@@ -698,7 +724,7 @@ def main():
     with tab2:
         generate_col, _ = st.columns([1, 3])
         if generate_col.button("⚡ Generate AI Summary", type="primary", use_container_width=True):
-            with st.spinner("Synthesizing log findings..."):
+            with st.spinner(f"Synthesizing log findings with Gemini ({gemini_model})..."):
                 st.session_state.ai_summary = summarizer.generate_summary(result)
 
         if st.session_state.ai_summary:

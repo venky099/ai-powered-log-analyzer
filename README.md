@@ -1,12 +1,12 @@
 # 🛡️ AI-Powered Defensive Log Analyzer
 
-An open-source, privacy-first log analysis workbench for developers, DevOps engineers, and cybersecurity analysts. This tool ingests server and application logs, flags operational errors and suspicious authentication leads using explainable deterministic detection rules, and synthesizes executive triage reports using a local Ollama LLM (`llama3.2:1b`) with zero cloud dependencies.
+An open-source, defensive log analysis workbench for developers, DevOps engineers, and cybersecurity analysts. This tool ingests server and application logs, flags operational errors and suspicious authentication leads using explainable deterministic detection rules, and synthesizes executive triage reports using the **Google Gemini API** (`gemini-2.5-flash`) with resilient local deterministic fallback.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B.svg)](https://streamlit.io/)
-[![Ollama Compatible](https://img.shields.io/badge/Ollama-Offline%20LLM-black.svg)](https://ollama.com/)
-[![Tests](https://img.shields.io/badge/tests-41%20passed-brightgreen.svg)]()
+[![Google Gemini API](https://img.shields.io/badge/Google%20Gemini-API%20Integrated-4285F4.svg)](https://ai.google.dev/)
+[![Tests](https://img.shields.io/badge/tests-47%20passed-brightgreen.svg)]()
 
 ---
 
@@ -19,7 +19,7 @@ An open-source, privacy-first log analysis workbench for developers, DevOps engi
 6. [Quickstart Setup Guide](#-quickstart-setup-guide)
    - [Windows Setup](#windows-setup)
    - [Linux & Kali Linux Setup](#linux--kali-linux-setup)
-7. [Ollama Local AI Setup](#-ollama-local-ai-setup)
+7. [Google Gemini API Setup](#-google-gemini-api-setup)
 8. [Running the Application](#-running-the-application)
 9. [Automated Testing](#-automated-testing)
 10. [Sample Data & Walkthrough](#-sample-data--walkthrough)
@@ -33,12 +33,12 @@ An open-source, privacy-first log analysis workbench for developers, DevOps engi
 
 ## 🔍 Project Overview
 
-Production logs contain high-value operational signals, but manual inspection across thousands of lines is error-prone. While cloud AI services can assist with summarization, transmitting proprietary log files containing IP addresses, user identifiers, and stack traces to commercial AI APIs introduces critical compliance and privacy risks.
+Production logs contain high-value operational signals, but manual inspection across thousands of lines is error-prone. 
 
 The **AI-Powered Log Analyzer** addresses this by pairing:
 1. **Deterministic Rule Detection:** Instant, explainable identification of `CRITICAL`, `FATAL`, `ERROR`, `WARNING`, database drops, and repeated authentication anomalies.
-2. **Local AI Inference:** On-device synthesis using Ollama running `llama3.2:1b`, keeping 100% of telemetry within your local perimeter.
-3. **Resilient Fallback:** When Ollama is offline or uninstalled, the analyzer automatically provides a deterministic executive summary with no downtime or feature degradation.
+2. **Google Gemini AI Inference:** High-intelligence synthesis using Google Gemini (`gemini-2.5-flash`, `gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-2.5-pro`), transforming structured telemetry into actionable executive summaries.
+3. **Resilient Fallback Engine:** When the Gemini API key is unconfigured or network issues arise, the analyzer automatically provides a deterministic executive summary with no downtime or feature degradation.
 
 ---
 
@@ -48,12 +48,12 @@ The **AI-Powered Log Analyzer** addresses this by pairing:
 - **📦 Multi-Format Ingestion:** Seamlessly parses unstructured syslogs as well as structured JSON-lines (`.json`, `.jsonl`, Bunyan, ECS, Pino, Zap).
 - **🔢 Strict IPv4 Extraction & Grouping:** Distinguishes valid IPv4 addresses from version numbers and timestamps, grouping failed logins by source IP against configurable thresholds.
 - **📊 Visual Analytics & Distributions:** Interactive Altair charts rendering findings by severity and category distributions.
-- **🔒 Prompt-Injection Defenses:** Treats all log contents as untrusted data wrapped in security barriers to prevent instruction hijacking of the local LLM.
+- **🔒 Prompt-Injection Defenses:** Treats all log contents as untrusted data wrapped in `<log_evidence>` security barriers to prevent instruction hijacking.
+- **🧠 Google Gemini API Integration:** Fast, high-accuracy analysis powered by official `google-genai` SDK with customizable model identifiers and live key input in the UI.
 - **📊 Interactive Streamlit Dashboard:** Instant metric cards, severity and category filtering, full-text search, and expandable evidence cards.
 - **📥 Secure Export Capabilities:**
   - **CSV Export:** RFC 4180 compliant with formula injection protection (`=, +, -, @` escaping).
   - **Text / Markdown Investigation Reports:** Ready for incident ticketing and post-mortem logs.
-- **⚡ Zero Cloud Cost:** Built entirely on open-source libraries and local inference.
 
 ---
 
@@ -64,8 +64,8 @@ The **AI-Powered Log Analyzer** addresses this by pairing:
 | **Language** | Python 3.11+ | Core implementation & standard library |
 | **UI Dashboard** | Streamlit | Web interface and interactive filtering |
 | **Data Processing** | pandas | Tabular data representation and filtering |
-| **Local LLM** | Ollama (`llama3.2:1b`) | Local executive summarization |
-| **HTTP Client** | requests | Communication with Ollama local API |
+| **Visualizations** | Altair | Telemetry distribution charts |
+| **AI Engine** | Google Gemini API (`gemini-2.5-flash`) | Executive triage summarization via `google-genai` |
 | **Testing** | pytest | Automated unit and integration testing |
 
 ---
@@ -74,13 +74,13 @@ The **AI-Powered Log Analyzer** addresses this by pairing:
 
 ```mermaid
 flowchart TD
-    A[Log File .log / .txt] --> B[Log Parser\nsrc/log_parser.py]
+    A[Log File .log / .txt / .jsonl] --> B[Log Parser\nsrc/log_parser.py]
     B --> C[Detection Engine\nsrc/detectors.py]
     B --> D[Metrics Aggregation\nsrc/analyzer.py]
     C --> D
-    D --> E{Ollama Running?}
-    E -- Yes --> F[Local LLM Summary\nsrc/ai_summarizer.py]
-    E -- No --> G[Deterministic Fallback Summary]
+    D --> E{Gemini API Configured?}
+    E -- Yes --> F[Google Gemini API\nsrc/ai_summarizer.py]
+    E -- No / Error --> G[Deterministic Fallback Summary]
     F --> H[Streamlit Dashboard\napp.py]
     G --> H
     H --> I[CSV Export\nsrc/report_generator.py]
@@ -95,7 +95,7 @@ Detailed architectural specifications and component boundaries are documented in
 
 - Python 3.11 or higher
 - Git (recommended for version control)
-- *(Optional)* [Ollama](https://ollama.com/) for local AI summarization
+- *(Optional)* [Google AI Studio API Key](https://aistudio.google.com/app/apikey) for Gemini AI summarization
 
 ---
 
@@ -153,23 +153,22 @@ Detailed architectural specifications and component boundaries are documented in
 
 ---
 
-## 🦙 Ollama Local AI Setup
+## 🔑 Google Gemini API Setup
 
-The application works completely out of the box **without** Ollama using its built-in deterministic fallback engine.
+The application works completely out of the box **with or without** a Gemini API key using its built-in deterministic fallback engine.
 
-To enable local AI executive summaries:
+To enable Gemini AI executive summaries:
 
-1. **Install Ollama:**
-   - Download the installer from [https://ollama.com/download](https://ollama.com/download) for Windows, macOS, or Linux.
-2. **Pull the lightweight default model (`llama3.2:1b`):**
-   ```bash
-   ollama pull llama3.2:1b
-   ```
-3. **Verify Ollama is running:**
-   ```bash
-   ollama list
-   ```
-4. In the Streamlit sidebar, the status indicator will turn green: `🟢 Ollama Online (llama3.2:1b)`.
+1. **Get an API Key:**
+   - Create a free Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. **Configure Your API Key:**
+   - **Option A (Environment):** Paste your key into `.env`:
+     ```bash
+     GEMINI_API_KEY=your_gemini_api_key_here
+     GEMINI_MODEL=gemini-2.5-flash
+     ```
+   - **Option B (Dashboard UI):** Enter the key directly into the sidebar text box in the web dashboard.
+3. In the Streamlit sidebar, the status indicator will turn green: `🟢 Gemini Ready (gemini-2.5-flash)`.
 
 ---
 
@@ -188,18 +187,18 @@ streamlit run app.py
 The application will launch in your default web browser at `http://localhost:8501`.
 
 ### How to Use the Dashboard
-1. **Upload or Load Sample:** Upload your `.log` or `.txt` file via the sidebar, or click **Load Sample Log** to test synthetic telemetry.
+1. **Upload or Load Sample:** Upload your `.log`, `.txt`, `.json`, or `.jsonl` file via the sidebar, or click **📄 Text Log** / **📦 JSON Log** to test synthetic telemetry.
 2. **Review Metrics:** View high-level cards displaying Total Lines, Critical Events, Errors, Warnings, and Repeated IP Leads.
 3. **Filter Findings:** Use the dropdowns in the **Findings & Evidence** tab to filter by severity (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) or search by IP/keyword.
 4. **Inspect Evidence:** Click any finding expander to examine the exact raw log lines and timestamps.
-5. **Generate AI Summary:** Go to the **AI Executive Summary** tab and click **Generate Summary** for automated triage suggestions.
+5. **Generate AI Summary:** Go to the **AI Executive Summary** tab and click **⚡ Generate AI Summary** for automated triage suggestions synthesized by Google Gemini.
 6. **Download Reports:** Navigate to **Export & Reports** to download RFC 4180 CSV findings or text reports.
 
 ---
 
 ## 🧪 Automated Testing
 
-The project includes a comprehensive test suite covering empty inputs, Unicode resilience, timestamp parsing, CSV formula escaping, threshold triggers, and mock Ollama failures.
+The project includes a comprehensive test suite covering empty inputs, Unicode resilience, timestamp parsing, CSV formula escaping, threshold triggers, and mock Gemini API failures/fallbacks.
 
 Run all tests via pytest:
 
@@ -217,13 +216,14 @@ pytest -v
 - ✅ Critical, Fatal, Warning, Error, and Database heuristics
 - ✅ Repeated authentication threshold grouping by IP
 - ✅ CSV Formula Injection sanitization (`=cmd`, `@SUM`, etc.)
-- ✅ Mocked Ollama offline, timeout, and HTTP 404 behavior
+- ✅ Gemini API generation, empty response, HTTP 400, HTTP 404, HTTP 429 quota, and timeout fallback
+- ✅ Backwards compatibility alias (`OllamaSummarizer`)
 
 ---
 
 ## 📂 Sample Data & Walkthrough
 
-A harmless synthetic log file is provided in [`sample_logs/sample.log`](file:///C:/Users/DELL/project/res/sample_logs/sample.log).
+Synthetic log files are provided in [`sample_logs/sample.log`](file:///C:/Users/DELL/project/res/sample_logs/sample.log) and [`sample_logs/sample_json.jsonl`](file:///C:/Users/DELL/project/res/sample_logs/sample_json.jsonl).
 
 ### Observed Events in Sample Log:
 - **Application Startup:** Normal informational entries.
@@ -239,8 +239,10 @@ A harmless synthetic log file is provided in [`sample_logs/sample.log`](file:///
 
 | Issue | Cause | Solution |
 | :--- | :--- | :--- |
-| **Ollama Offline (Fallback active)** | Ollama service is not running | Run `ollama serve` or start the Ollama desktop tray application. |
-| **Ollama Online (Model missing)** | `llama3.2:1b` has not been downloaded | Run `ollama pull llama3.2:1b` in your terminal. |
+| **API Key Required (Fallback active)** | No Gemini API key provided | Paste your key in the sidebar or set `GEMINI_API_KEY` in `.env`. |
+| **Gemini API Error (400/403)** | API key is invalid or lacks permissions | Check your API key at [Google AI Studio](https://aistudio.google.com/app/apikey). |
+| **Gemini Quota Exceeded (429)** | Free tier request limits reached | Wait a moment or upgrade quota; deterministic fallback will serve summaries in the meantime. |
+| **Model Not Found (404)** | Typo in model identifier | Select a preset (e.g. `gemini-2.5-flash`, `gemini-1.5-flash`) or check the model name. |
 | **File size exceeds limit** | Uploaded file > 2 MB default | Adjust `MAX_UPLOAD_SIZE_MB` in `.env` or upload a smaller log segment. |
 | **PowerShell script execution error** | Windows execution policy blocks `.venv` | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` |
 
@@ -249,7 +251,7 @@ A harmless synthetic log file is provided in [`sample_logs/sample.log`](file:///
 ## 🔒 Privacy & Security Boundary
 
 - **Local Memory Processing:** Uploaded logs are processed transiently in memory; logs are never permanently stored on disk unless explicitly exported by the user.
-- **Air-Gapped AI:** All LLM queries connect directly to `http://localhost:11434`. No telemetric data or log excerpts leave the local host.
+- **Bounded Context AI:** Only structured aggregated metrics and a bounded subset of findings (up to 15) are transmitted to the Gemini API, rather than dumping raw multi-megabyte log streams.
 - **Defensive Prompt Engineering:** Findings are wrapped in `<log_evidence>` security barriers to defend against log injection attacks.
 
 ---
@@ -264,9 +266,9 @@ For a detailed breakdown of false-positive risks and architectural boundaries, s
 
 ## 🔮 Future Roadmap
 
-- [ ] Support for JSON-structured logs (ECS and Bunyan formats).
+- [ ] Support for custom endpoint proxies for enterprise VPC deployments.
 - [ ] Timeline visualization of event spikes using Altair / Streamlit charts.
-- [ ] Integration with local threat intelligence lists (RFC 1918 vs public bogon filtering).
+- [ ] Integration with threat intelligence lists (RFC 1918 vs public bogon filtering).
 - [ ] Multi-file correlation across frontend and backend log streams.
 
 ---
@@ -275,15 +277,5 @@ For a detailed breakdown of false-positive risks and architectural boundaries, s
 
 ### Suggested Repository Details:
 - **Repository Name:** `ai-powered-log-analyzer`
-- **Short Description:** *Defensive local log analyzer and triage dashboard with explainable detection rules, local Ollama AI summarization, and zero cloud dependencies.*
-- **Suggested Topics:** `cybersecurity`, `log-analyzer`, `incident-response`, `ollama`, `streamlit`, `python`, `threat-detection`, `defensive-security`, `portfolio-project`
-
-### Pushing to GitHub:
-```bash
-git init
-git add .
-git commit -m "feat: initial commit of ai-powered-log-analyzer"
-git branch -M main
-git remote add origin https://github.com/venky099/ai-powered-log-analyzer.git
-git push -u origin main
-```
+- **Short Description:** *Defensive log analyzer and triage dashboard with explainable detection rules, Google Gemini API summarization, and deterministic fallback.*
+- **Suggested Topics:** `cybersecurity`, `log-analyzer`, `incident-response`, `gemini-api`, `streamlit`, `python`, `threat-detection`, `defensive-security`
