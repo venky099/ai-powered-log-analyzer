@@ -22,14 +22,16 @@ def sample_analysis_result():
 
 def test_gemini_missing_api_key_fallback(sample_analysis_result):
     """When API key is not configured, return deterministic fallback without crashing."""
-    summarizer = GeminiSummarizer(api_key="")
-    res: AISummaryResult = summarizer.generate_summary(sample_analysis_result)
+    with patch.dict("os.environ", {"GEMINI_API_KEY": ""}):
+        with patch("src.ai_summarizer._load_env_file"):
+            summarizer = GeminiSummarizer(api_key="")
+            res: AISummaryResult = summarizer.generate_summary(sample_analysis_result)
 
-    assert not res.is_ai_generated
-    assert "Deterministic Rule Engine (Fallback)" in res.model_name
-    assert "Rule-Based Executive Summary" in res.summary_text
-    assert "192.168.1.50" in res.summary_text
-    assert "not configured" in res.status_message.lower()
+            assert not res.is_ai_generated
+            assert "Deterministic Rule Engine (Fallback)" in res.model_name
+            assert "Rule-Based Executive Summary" in res.summary_text
+            assert "192.168.1.50" in res.summary_text
+            assert "not configured" in res.status_message.lower()
 
 
 def test_gemini_successful_generation(sample_analysis_result):
@@ -129,10 +131,12 @@ def test_gemini_unexpected_exception(sample_analysis_result):
 
 def test_check_gemini_status_unconfigured():
     """Status check returns False when API key is missing."""
-    summarizer = GeminiSummarizer(api_key="")
-    is_ok, msg = summarizer.check_gemini_status()
-    assert not is_ok
-    assert "not configured" in msg.lower()
+    with patch.dict("os.environ", {"GEMINI_API_KEY": ""}):
+        with patch("src.ai_summarizer._load_env_file"):
+            summarizer = GeminiSummarizer(api_key="")
+            is_ok, msg = summarizer.check_gemini_status()
+            assert not is_ok
+            assert "not configured" in msg.lower()
 
 
 def test_check_gemini_status_configured_offline():
@@ -169,10 +173,12 @@ def test_check_gemini_status_online_failure():
 
 def test_ollama_summarizer_alias_compatibility(sample_analysis_result):
     """Verify OllamaSummarizer alias preserves constructor compatibility and fallback."""
-    summarizer = OllamaSummarizer(host="http://localhost:11434", model="gemini-3.8-flash", api_key="")
-    is_ok, msg = summarizer.check_ollama_status()
-    assert not is_ok  # No key configured
+    with patch.dict("os.environ", {"GEMINI_API_KEY": ""}):
+        with patch("src.ai_summarizer._load_env_file"):
+            summarizer = OllamaSummarizer(host="http://localhost:11434", model="gemini-3.8-flash", api_key="")
+            is_ok, msg = summarizer.check_ollama_status()
+            assert not is_ok  # No key configured
 
-    res = summarizer.generate_summary(sample_analysis_result)
-    assert not res.is_ai_generated
-    assert "Rule-Based Executive Summary" in res.summary_text
+            res = summarizer.generate_summary(sample_analysis_result)
+            assert not res.is_ai_generated
+            assert "Rule-Based Executive Summary" in res.summary_text

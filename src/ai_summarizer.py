@@ -19,8 +19,12 @@ from src.analyzer import AnalysisResult
 
 
 def _load_env_file():
-    """Load key-value pairs from .env into os.environ if not already set."""
-    env_paths = [Path(".env"), Path(__file__).resolve().parent.parent / ".env"]
+    """Load key-value pairs from .env into os.environ."""
+    env_paths = [
+        Path(".env"),
+        Path(__file__).resolve().parent / ".env",
+        Path(__file__).resolve().parent.parent / ".env",
+    ]
     for path in env_paths:
         if path.is_file():
             try:
@@ -31,7 +35,7 @@ def _load_env_file():
                     key, _, val = line.partition("=")
                     key = key.strip()
                     val = val.strip().strip("'\"")
-                    if key and key not in os.environ:
+                    if key and val:
                         os.environ[key] = val
                 break
             except Exception:
@@ -70,7 +74,11 @@ class GeminiSummarizer:
             timeout_seconds: API request timeout in seconds.
             host: Unused, kept for backwards compatibility with legacy callers.
         """
-        self.api_key = (api_key if api_key is not None else os.getenv("GEMINI_API_KEY", "")).strip()
+        _load_env_file()
+        if api_key and api_key.strip():
+            self.api_key = api_key.strip()
+        else:
+            self.api_key = os.getenv("GEMINI_API_KEY", "").strip()
         self.model = model or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
         env_timeout = os.getenv("GEMINI_TIMEOUT_SECONDS", "120")
         try:
