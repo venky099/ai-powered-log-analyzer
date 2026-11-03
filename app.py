@@ -1,8 +1,7 @@
-"""AI-Powered Log Analyzer - High-Performance Security Operations Dashboard.
+"""AI-Powered Log Analyzer - Streamlit dashboard for triaging log files.
 
-A modern, defensive log analysis dashboard featuring glassmorphism cards,
-cybersecurity typography (Plus Jakarta Sans & JetBrains Mono), visual Altair
-distributions, structured JSON-lines support, and Google Gemini AI summarization.
+Parses syslogs and structured JSON-lines, flags anomalies using deterministic
+rules, and provides executive summaries via Google Gemini or local fallback.
 """
 
 from __future__ import annotations
@@ -50,276 +49,14 @@ st.set_page_config(
 )
 
 
+STYLE_CSS_PATH = Path(__file__).parent / "assets" / "style.css"
+
+
 def inject_custom_styles():
-    """Inject clean typography and modern dark theme CSS."""
-    st.markdown(
-        """
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
-
-        /* Safe Global Typography */
-        html, body, .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        }
-
-        /* Strictly protect icon fonts so icon ligatures (like 'upload') do not render as text */
-        [data-testid="stIconMaterial"], 
-        .material-symbols-rounded, 
-        .material-icons,
-        [class*="material-symbols"],
-        [class*="material-icons"],
-        span:empty,
-        svg {
-            font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
-        }
-
-        code, pre, .stCode, [data-testid="stCodeBlock"], [data-testid="stCodeBlock"] * {
-            font-family: 'JetBrains Mono', monospace !important;
-        }
-
-        /* Data Table Typography: High-Precision Monospace Grid */
-        [data-testid="stDataFrame"], 
-        [data-testid="stDataFrame"] *,
-        .dvn-scroller,
-        [data-testid="stTable"] {
-            font-family: 'JetBrains Mono', 'Courier New', monospace !important;
-            font-size: 0.82rem !important;
-            letter-spacing: -0.01em !important;
-        }
-
-        /* Alert Feed Card Typography: High-Tech Security Font */
-        .streamlit-expanderHeader {
-            font-family: 'Space Grotesk', 'Inter', sans-serif !important;
-            font-size: 0.93rem !important;
-            font-weight: 600 !important;
-            letter-spacing: -0.01em !important;
-            color: #f8fafc !important;
-        }
-
-        .alert-meta-chip {
-            font-family: 'JetBrains Mono', monospace !important;
-            font-size: 0.78rem !important;
-            background: rgba(15, 23, 42, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            border-radius: 6px !important;
-            padding: 4px 8px !important;
-            color: #cbd5e1 !important;
-            display: inline-block !important;
-            margin-bottom: 4px !important;
-        }
-
-        .alert-triage-box {
-            font-family: 'Inter', sans-serif !important;
-        }
-
-        .alert-triage-title {
-            font-family: 'Space Grotesk', sans-serif !important;
-            font-size: 0.72rem !important;
-            font-weight: 700 !important;
-            letter-spacing: 0.06em !important;
-            text-transform: uppercase !important;
-            color: #94a3b8 !important;
-        }
-
-        .alert-triage-body {
-            font-family: 'Inter', sans-serif !important;
-            font-size: 0.88rem !important;
-            line-height: 1.5 !important;
-            color: #f1f5f9 !important;
-            margin-top: 2px !important;
-        }
-
-        /* App Canvas */
-        .stApp {
-            background: linear-gradient(145deg, #070a12 0%, #0d1322 40%, #090e1a 100%);
-            color: #e2e8f0;
-        }
-
-        /* Sidebar */
-        [data-testid="stSidebar"] {
-            background-color: #090d18 !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.07);
-        }
-
-        /* Modern Top Bar Card */
-        .top-navbar {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
-            padding: 14px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-        }
-
-        .brand-title {
-            font-size: 1.45rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-            display: inline-block;
-        }
-
-        .badge-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(56, 189, 248, 0.1);
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: 20px;
-            padding: 3px 10px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-
-        .badge-pill-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border-color: rgba(16, 185, 129, 0.25);
-        }
-
-        /* Minimalist Metric Cards */
-        .metric-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.7) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 16px 18px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-
-        .metric-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.18);
-        }
-
-        .metric-card-accent {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-        }
-
-        .metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .metric-label {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: #94a3b8;
-        }
-
-        .metric-icon {
-            font-size: 1.05rem;
-            opacity: 0.85;
-        }
-
-        .metric-value {
-            font-size: 1.85rem;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -0.02em;
-            color: #f8fafc;
-            line-height: 1.1;
-        }
-
-        .metric-delta {
-            font-size: 0.72rem;
-            margin-top: 6px;
-            font-weight: 600;
-        }
-
-        /* Chart Card Container */
-        .chart-panel-card {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 18px 20px 10px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        }
-
-        .chart-panel-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #cbd5e1;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Tabs Polish */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 6px;
-            background-color: rgba(15, 23, 42, 0.6);
-            padding: 5px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .stTabs [data-baseweb="tab"] {
-            border-radius: 8px;
-            padding: 8px 18px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #94a3b8;
-            border: none !important;
-            transition: all 0.2s ease;
-        }
-
-        .stTabs [aria-selected="true"] {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
-            color: #38bdf8 !important;
-            border: 1px solid rgba(56, 189, 248, 0.25) !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Buttons */
-        .stButton>button {
-            border-radius: 8px;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            transition: all 0.2s ease;
-        }
-
-        .stButton>button:hover {
-            transform: translateY(-1px);
-            border-color: #38bdf8;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
-        }
-
-        /* Expanders */
-        .streamlit-expanderHeader {
-            background-color: rgba(15, 23, 42, 0.6) !important;
-            border-radius: 8px !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            font-weight: 600 !important;
-            padding: 10px 14px !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    """Inject modern dark theme CSS from assets/style.css."""
+    if STYLE_CSS_PATH.is_file():
+        css = STYLE_CSS_PATH.read_text(encoding="utf-8")
+        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 
 def init_session_state():
@@ -328,8 +65,6 @@ def init_session_state():
         st.session_state.analysis_result = None
     if "ai_summary" not in st.session_state:
         st.session_state.ai_summary = None
-    if "source_type" not in st.session_state:
-        st.session_state.source_type = None
 
 
 def run_analysis(content_bytes: bytes, filename: str, threshold: int):
@@ -405,7 +140,7 @@ def render_visual_analytics(result: AnalysisResult):
                     labelAngle=0,
                     labelColor="#cbd5e1",
                     labelFontSize=11,
-                    labelFont="Plus Jakarta Sans",
+                    labelFont="sans-serif",
                 ),
             ),
             y=alt.Y(
@@ -423,7 +158,7 @@ def render_visual_analytics(result: AnalysisResult):
         )
         .properties(title="Findings by Severity Tier", height=210)
         .configure_view(strokeWidth=0)
-        .configure_title(color="#e2e8f0", fontSize=12, font="Plus Jakarta Sans", anchor="start")
+        .configure_title(color="#e2e8f0", fontSize=12, font="sans-serif", anchor="start")
     )
     chart_col1.altair_chart(sev_chart, use_container_width=True)
 
@@ -456,14 +191,14 @@ def render_visual_analytics(result: AnalysisResult):
                         labelAngle=0,
                         labelColor="#cbd5e1",
                         labelFontSize=11,
-                        labelFont="Plus Jakarta Sans",
+                        labelFont="sans-serif",
                     ),
                 ),
                 tooltip=["Category", "Count"],
             )
             .properties(title="Events by Detection Category", height=210)
             .configure_view(strokeWidth=0)
-            .configure_title(color="#e2e8f0", fontSize=12, font="Plus Jakarta Sans", anchor="start")
+            .configure_title(color="#e2e8f0", fontSize=12, font="sans-serif", anchor="start")
         )
         chart_col2.altair_chart(cat_chart, use_container_width=True)
 
@@ -511,7 +246,6 @@ def main():
     if clear_data:
         st.session_state.analysis_result = None
         st.session_state.ai_summary = None
-        st.session_state.source_type = None
         st.rerun()
 
     st.sidebar.markdown("---")
@@ -572,12 +306,10 @@ def main():
 
     # Data ingestion handlers
     if load_sample_text and SAMPLE_LOG_PATH.exists():
-        st.session_state.source_type = "sample.log"
         run_analysis(SAMPLE_LOG_PATH.read_bytes(), "sample.log", failed_login_threshold)
         st.rerun()
 
     if load_sample_json and SAMPLE_JSON_PATH.exists():
-        st.session_state.source_type = "sample_json.jsonl"
         run_analysis(SAMPLE_JSON_PATH.read_bytes(), "sample_json.jsonl", failed_login_threshold)
         st.rerun()
 
@@ -593,7 +325,6 @@ def main():
             st.session_state.analysis_result is None
             or st.session_state.analysis_result.filename != uploaded_file.name
         ):
-            st.session_state.source_type = uploaded_file.name
             run_analysis(file_bytes, uploaded_file.name, failed_login_threshold)
             st.rerun()
 

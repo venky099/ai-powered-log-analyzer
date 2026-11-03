@@ -98,7 +98,7 @@ def generate_text_report(
     """
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     metrics = analysis_result.metrics
-    # Treat filename strictly as display text, escaping markdown/brackets
+    # Treat filename strictly as display text, sanitizing newlines
     safe_filename = analysis_result.filename.replace("\n", " ").replace("\r", " ")
 
     lines = [

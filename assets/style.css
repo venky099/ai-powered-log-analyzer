@@ -1,0 +1,238 @@
+/* Theme & Typography - Local System Fonts */
+html, body, .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, label {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Icon font protection */
+[data-testid="stIconMaterial"], 
+.material-symbols-rounded, 
+.material-icons,
+[class*="material-symbols"],
+[class*="material-icons"],
+span:empty,
+svg {
+    font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+}
+
+/* Monospace Elements */
+code, pre, .stCode, [data-testid="stCodeBlock"], [data-testid="stCodeBlock"] *,
+[data-testid="stDataFrame"], [data-testid="stDataFrame"] *, .dvn-scroller, [data-testid="stTable"] {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace !important;
+    font-size: 0.82rem !important;
+}
+
+/* App Canvas */
+.stApp {
+    background: linear-gradient(145deg, #070a12 0%, #0d1322 40%, #090e1a 100%);
+    color: #e2e8f0;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: #090d18 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Top Navigation Bar */
+.top-navbar {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.brand-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    display: inline-block;
+}
+
+.badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.badge-pill-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+/* Metric Cards */
+.metric-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.7) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.metric-card-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.metric-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+}
+
+.metric-icon {
+    font-size: 1.05rem;
+    opacity: 0.85;
+}
+
+.metric-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: -0.02em;
+    color: #f8fafc;
+    line-height: 1.1;
+}
+
+.metric-delta {
+    font-size: 0.72rem;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* Chart Panel Container */
+.chart-panel-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 18px 20px 10px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.chart-panel-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 6px;
+    background-color: rgba(15, 23, 42, 0.6);
+    padding: 5px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    border: none !important;
+    transition: all 0.2s ease;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.25) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Buttons */
+.stButton>button {
+    border-radius: 8px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: all 0.2s ease;
+}
+
+.stButton>button:hover {
+    transform: translateY(-1px);
+    border-color: #38bdf8;
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+}
+
+/* Expander & Alert Feed */
+.streamlit-expanderHeader {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    font-weight: 600 !important;
+    padding: 10px 14px !important;
+    color: #f8fafc !important;
+}
+
+.alert-meta-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 0.78rem !important;
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    color: #cbd5e1 !important;
+    display: inline-block !important;
+    margin-bottom: 4px !important;
+}
+
+.alert-triage-title {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: #94a3b8 !important;
+}
+
+.alert-triage-body {
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+    color: #f1f5f9 !important;
+    margin-top: 2px !important;
+}
