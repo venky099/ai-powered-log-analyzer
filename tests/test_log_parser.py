@@ -155,3 +155,19 @@ def test_parse_json_malformed_fallback():
     entry = parse_log_line(1, broken_line)
     assert entry.raw_text == broken_line
     assert entry.severity == "ERROR"
+
+
+def test_bracketed_level_without_timestamp_preserves_severity():
+    """Lines starting with [LEVEL] must not treat the level as a timestamp."""
+    entry_err = parse_log_line(1, "[ERROR] Database connection pool exhausted")
+    assert entry_err.timestamp is None
+    assert entry_err.severity == "ERROR"
+
+    entry_crit = parse_log_line(2, "[CRITICAL] Out of memory killer invoked")
+    assert entry_crit.timestamp is None
+    assert entry_crit.severity == "CRITICAL"
+
+    # With a timestamp in brackets preceding the bracketed level
+    entry_both = parse_log_line(3, "[2026-10-29 09:00:00] [ERROR] Service crashed")
+    assert entry_both.timestamp == "2026-10-29 09:00:00"
+    assert entry_both.severity == "ERROR"

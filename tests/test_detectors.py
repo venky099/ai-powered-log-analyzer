@@ -29,12 +29,13 @@ def test_critical_and_fatal_detection():
     content = (
         "2026-10-29 09:00:00 CRITICAL Kernel panic in core-0\n"
         "2026-10-29 09:01:00 FATAL Out of memory killed process\n"
+        "[CRITICAL] Out of memory\n"
     )
     entries = parse_logs(content)
     engine = DetectionEngine(failed_login_threshold=3)
     findings = engine.analyze(entries)
 
-    assert len(findings) == 2
+    assert len(findings) == 3
     for f in findings:
         assert f.severity == "CRITICAL"
         assert f.category == "CRITICAL_FAILURE"

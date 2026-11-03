@@ -171,6 +171,17 @@ def extract_valid_ipv4(text: str) -> Optional[str]:
     return None
 
 
+def _is_valid_bracketed_timestamp(cand: str) -> bool:
+    """Check whether a bracketed string looks like a timestamp and not a log level."""
+    cleaned = cand.strip()
+    if cleaned.upper() in _SEVERITY_KEYWORDS:
+        return False
+    # Only accept bracketed value as a timestamp if it contains digits and a date/time separator
+    has_digits = any(ch.isdigit() for ch in cleaned)
+    has_separator = any(ch in "-/:." for ch in cleaned)
+    return has_digits and has_separator
+
+
 def extract_timestamp(text: str) -> Tuple[Optional[str], str]:
     """Extract a timestamp from the start of a log line if present.
 
@@ -185,6 +196,8 @@ def extract_timestamp(text: str) -> Tuple[Optional[str], str]:
         match = pattern.search(stripped)
         if match:
             ts = match.group("ts").strip()
+            if stripped.startswith("[") and not _is_valid_bracketed_timestamp(ts):
+                continue
             # Remainder after the match
             remaining = stripped[match.end():].strip()
             # If remaining starts with separator like '-', ':', or whitespace
