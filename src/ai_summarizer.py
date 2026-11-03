@@ -234,7 +234,9 @@ class GeminiSummarizer:
                 f"    Recommended Step: {f.recommended_step}\n"
             )
 
-        return "\n".join(lines)
+        raw_context = "\n".join(lines)
+        # Strip angle brackets to prevent early closing tag injection (e.g. </log_evidence>)
+        return raw_context.replace("<", "").replace(">", "")
 
     def _fallback_summary(self, result: AnalysisResult, reason: str) -> AISummaryResult:
         """Produce a comprehensive, deterministic summary when Gemini is unavailable."""

@@ -46,7 +46,7 @@ flowchart TD
    - Bundles verified evidence into structured contexts for AI summarization.
 
 4. **AI Executive Summarization (`src/ai_summarizer.py`)**
-   - **Prompt Injection Defense:** Encapsulates findings inside `<log_evidence>` tags with explicit defensive system prompts warning the model to treat all log entries as untrusted data.
+   - **Prompt Injection Defense:** Encapsulates findings inside `<log_evidence>` tags after stripping angle brackets (`<`, `>`) to reduce the risk of tag breakout, with explicit defensive system prompts warning the model to treat all log entries as untrusted data.
    - **Bounded Context:** Supplies top findings (up to 15) and metric aggregates rather than dumping raw multi-megabyte log files into the model context.
    - **Google Gemini API:** Integrates using the official `google-genai` SDK (`gemini-2.5-flash`, `gemini-1.5-flash`, etc.) for fast, accurate threat and incident synthesis.
    - **Graceful Fallback:** If the API key is unconfigured, rate-limited, or offline, automatically generates a comprehensive deterministic executive summary with identical sections and zero service degradation.
