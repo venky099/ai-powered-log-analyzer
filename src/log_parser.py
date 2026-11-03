@@ -40,11 +40,8 @@ class ParsedLogEntry:
         }
 
 
-# Compiled regex patterns for efficiency
-_IPV4_PATTERN = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
-
-# Regex to avoid matching version numbers or numeric IDs like v1.2.3.4 or 1.2.3.4.5
-_NON_IP_PREFIX_SUFFIX = re.compile(r"(?:[a-zA-Z0-9_\-\./])")
+# Compiled regex pattern for IPv4 extraction
+_IPV4_PATTERN = re.compile(r"(?<![\w.\-])(?:\d{1,3}\.){3}\d{1,3}(?![\w]|\.[a-zA-Z0-9])")
 
 # Common timestamp patterns
 _TIMESTAMP_PATTERNS = [
@@ -140,31 +137,10 @@ def safe_read_bytes(raw_bytes: bytes) -> str:
 
 
 def extract_valid_ipv4(text: str) -> Optional[str]:
-    """Extract and strictly validate an IPv4 address from text.
-
-    Ensures that numeric patterns like version numbers (1.2.3.4.5),
-    timestamps, or invalid octets (256.1.1.1) are rejected.
-
-    Args:
-        text: String to search.
-
-    Returns:
-        Validated IPv4 string or None.
-    """
-    candidates = _IPV4_PATTERN.findall(text)
-    for cand in candidates:
-        # Check that it is not part of a larger dotted version string or path
-        pos = text.find(cand)
-        if pos > 0 and text[pos - 1] in ".-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
-            continue
-        after_pos = pos + len(cand)
-        if after_pos < len(text) and text[after_pos] in ".-_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
-            continue
-
+    """Extract and strictly validate an IPv4 address from text."""
+    for m in _IPV4_PATTERN.finditer(text):
         try:
-            ip_obj = ipaddress.IPv4Address(cand)
-            # Avoid returning 0.0.0.0 or 255.255.255.255 if not meaningful
-            return str(ip_obj)
+            return str(ipaddress.IPv4Address(m.group()))
         except ipaddress.AddressValueError:
             continue
 

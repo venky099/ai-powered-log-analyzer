@@ -42,6 +42,8 @@ def test_extract_valid_ipv4_success():
     """Valid IPv4 addresses should be extracted correctly."""
     assert extract_valid_ipv4("Failed login from 192.168.1.100") == "192.168.1.100"
     assert extract_valid_ipv4("Host 10.0.0.1 disconnected") == "10.0.0.1"
+    assert extract_valid_ipv4("Connection from 10.0.0.5.") == "10.0.0.5"
+    assert extract_valid_ipv4("v1.2.3.4 then from 1.2.3.4") == "1.2.3.4"
 
 
 def test_extract_valid_ipv4_invalid_octets():
@@ -54,6 +56,7 @@ def test_extract_valid_ipv4_version_string_rejection():
     """Version strings like v1.2.3.4 should not be extracted as valid IPs."""
     assert extract_valid_ipv4("Running software release v1.2.3.4 on server") is None
     assert extract_valid_ipv4("Module lib-1.2.3.4.so loaded") is None
+    assert extract_valid_ipv4("Release 1.2.3.4.5 deployed") is None
 
 
 def test_extract_timestamp_iso():
