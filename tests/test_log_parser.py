@@ -85,15 +85,28 @@ def test_extract_timestamp_missing_or_malformed():
 
 def test_extract_severity_normalization():
     """Recognized severities should normalize correctly."""
-    assert extract_severity("FATAL: System crash")[0] == "FATAL"
-    assert extract_severity("CRIT Server offline")[0] == "CRITICAL"
-    assert extract_severity("CRITICAL System halt")[0] == "CRITICAL"
-    assert extract_severity("ERROR Database disconnected")[0] == "ERROR"
-    assert extract_severity("ERR Socket closed")[0] == "ERROR"
-    assert extract_severity("WARN Response slow")[0] == "WARNING"
-    assert extract_severity("WARNING Disk 90% full")[0] == "WARNING"
-    assert extract_severity("INFO User login")[0] == "INFO"
-    assert extract_severity("DEBUG Packet sent")[0] == "DEBUG"
+    assert extract_severity("FATAL: System crash") == "FATAL"
+    assert extract_severity("CRIT Server offline") == "CRITICAL"
+    assert extract_severity("CRITICAL System halt") == "CRITICAL"
+    assert extract_severity("ERROR Database disconnected") == "ERROR"
+    assert extract_severity("ERR Socket closed") == "ERROR"
+    assert extract_severity("WARN Response slow") == "WARNING"
+    assert extract_severity("WARNING Disk 90% full") == "WARNING"
+    assert extract_severity("INFO User login") == "INFO"
+    assert extract_severity("DEBUG Packet sent") == "DEBUG"
+
+
+def test_ordinary_words_not_read_as_log_levels():
+    """Words like alert or error within arbitrary sentences must not be treated as log levels."""
+    assert extract_severity("Sent alert email to the team") is None
+    assert extract_severity("no error found") is None
+    assert extract_severity("System report: no error found") is None
+
+    entry1 = parse_log_line(1, "Sent alert email to the team")
+    assert entry1.severity is None
+
+    entry2 = parse_log_line(2, "Checked records, no error found")
+    assert entry2.severity is None
 
 
 def test_classify_event_pattern():
@@ -145,11 +158,15 @@ def test_parse_json_log_line():
 
 
 def test_parse_json_bunyan_numeric_level():
-    """Bunyan / Syslog numeric levels (e.g. 50=ERROR, 40=WARN) should be normalized."""
+    """Bunyan / Syslog numeric levels (e.g. 50=ERROR, 40=WARN, 10=TRACE) should be normalized."""
     json_line = '{"time": "2026-10-29T10:00:00Z", "level": 50, "msg": "Payment failed"}'
     entry = parse_log_line(1, json_line)
     assert entry.severity == "ERROR"
     assert entry.message == "Payment failed"
+
+    json_trace = '{"time": "2026-10-29T10:00:01Z", "level": 10, "msg": "Trace details"}'
+    entry_trace = parse_log_line(2, json_trace)
+    assert entry_trace.severity == "DEBUG"
 
 
 def test_parse_json_malformed_fallback():

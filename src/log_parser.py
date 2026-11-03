@@ -80,9 +80,19 @@ _SEVERITY_KEYWORDS = {
     "TRACE": "DEBUG",
 }
 
-# Regex to find severity keyword near start or inside brackets
-_SEVERITY_PATTERN = re.compile(
-    r"\b(FATAL|CRITICAL|CRIT|EMERGENCY|ALERT|ERROR|ERR|WARNING|WARN|INFO|NOTICE|DEBUG|TRACE)\b",
+# Regex patterns to find severity keyword at start of line, in brackets, or in explicit key-value fields
+_BRACKETED_SEVERITY_PATTERN = re.compile(
+    r"\[(FATAL|CRITICAL|CRIT|EMERGENCY|ALERT|ERROR|ERR|WARNING|WARN|INFO|NOTICE|DEBUG|TRACE)\]",
+    re.IGNORECASE,
+)
+
+_PREFIX_SEVERITY_PATTERN = re.compile(
+    r"^(?:[A-Za-z0-9_\-\./]+(?:\s*\[\d+\])?:\s*)?(FATAL|CRITICAL|CRIT|EMERGENCY|ALERT|ERROR|ERR|WARNING|WARN|INFO|NOTICE|DEBUG|TRACE)\b",
+    re.IGNORECASE,
+)
+
+_KEYVALUE_SEVERITY_PATTERN = re.compile(
+    r"[\"']?(?:level|severity|log_level|lvl)[\"']?\s*[:=]\s*[\"']?(FATAL|CRITICAL|CRIT|EMERGENCY|ALERT|ERROR|ERR|WARNING|WARN|INFO|NOTICE|DEBUG|TRACE)\b",
     re.IGNORECASE,
 )
 
@@ -183,25 +193,21 @@ def extract_timestamp(text: str) -> Tuple[Optional[str], str]:
     return None, stripped
 
 
-def extract_severity(text: str) -> Tuple[Optional[str], str]:
-    """Extract recognized severity level from log line.
+def extract_severity(text: str) -> Optional[str]:
+    """Extract recognized severity level from log line start, brackets, or key-value fields."""
+    bracket_match = _BRACKETED_SEVERITY_PATTERN.search(text)
+    if bracket_match:
+        return _SEVERITY_KEYWORDS.get(bracket_match.group(1).upper())
 
-    Args:
-        text: Log line or remainder after timestamp.
+    prefix_match = _PREFIX_SEVERITY_PATTERN.search(text.strip())
+    if prefix_match:
+        return _SEVERITY_KEYWORDS.get(prefix_match.group(1).upper())
 
-    Returns:
-        Tuple of (normalized_severity or None, remaining_text).
-    """
-    match = _SEVERITY_PATTERN.search(text)
-    if match:
-        raw_word = match.group(1).upper()
-        normalized = _SEVERITY_KEYWORDS.get(raw_word)
-        if normalized:
-            # We don't remove it from the message so full context remains,
-            # but return the normalized severity
-            return normalized, text
+    kv_match = _KEYVALUE_SEVERITY_PATTERN.search(text)
+    if kv_match:
+        return _SEVERITY_KEYWORDS.get(kv_match.group(1).upper())
 
-    return None, text
+    return None
 
 
 def classify_event_pattern(text: str) -> Optional[str]:
@@ -268,11 +274,10 @@ def _try_parse_json_log(line_number: int, cleaned_line: str, bounded_line: str) 
                 sev = "WARNING"
             elif raw_lvl in ("30", "INFO"):
                 sev = "INFO"
-            elif raw_lvl in ("20", "DEBUG", "TRACE"):
+            elif raw_lvl in ("20", "10", "DEBUG", "TRACE"):
                 sev = "DEBUG"
             else:
-                norm_sev, _ = extract_severity(raw_lvl)
-                sev = norm_sev
+                sev = extract_severity(raw_lvl)
             break
 
     # Message extraction
@@ -348,7 +353,7 @@ def parse_log_line(line_number: int, raw_line: str, max_line_length: int = 4096)
     ts, remaining = extract_timestamp(cleaned_line)
 
     # 2. Extract Severity
-    sev, _ = extract_severity(remaining if ts else cleaned_line)
+    sev = extract_severity(remaining if ts else cleaned_line)
 
     # 3. Extract Valid IPv4
     ip = extract_valid_ipv4(cleaned_line)
