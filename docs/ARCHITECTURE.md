@@ -49,7 +49,7 @@ flowchart TD
    - **Prompt Injection Defense:** Encapsulates findings inside `<log_evidence>` tags after stripping angle brackets (`<`, `>`) to reduce the risk of tag breakout, with explicit defensive system prompts warning the model to treat all log entries as untrusted data.
    - **Bounded Context:** Supplies top findings (up to 15) and metric aggregates rather than dumping raw multi-megabyte log files into the model context.
    - **Google Gemini API:** Integrates using the official `google-genai` SDK (`gemini-2.5-flash`, `gemini-1.5-flash`, etc.) for fast, accurate threat and incident synthesis.
-   - **Graceful Fallback:** If the API key is unconfigured, rate-limited, or offline, automatically generates a comprehensive deterministic executive summary with identical sections and zero service degradation.
+   - **Graceful Fallback:** If the API key is unconfigured, rate-limited, or offline, automatically generates a comprehensive deterministic executive summary based on rule results without external network calls.
 
 5. **Reporting & Presentation (`src/report_generator.py` & `app.py`)**
    - **Streamlit Interface:** Responsive dashboard with metrics cards, filterable tables, and evidence expanders.

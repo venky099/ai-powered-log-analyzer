@@ -24,9 +24,9 @@ The **AI-Powered Log Analyzer** is developed as a defensive, educational triage 
 - An analyst cannot determine whether an authentication attempt succeeded without comparing with subsequent authentication logs across all ingress endpoints.
 - Source IP spoofing (over UDP) or proxy headers (`X-Forwarded-For`) can be falsified unless validated against perimeter load balancers.
 
-### 4. Local AI Model Constraints
-- Local small-scale LLMs (such as `llama3.2:1b`) have finite reasoning capacity and may occasionally generalize or misinterpret complex log sequences.
-- The local AI module is strictly advisory:
+### 4. AI Model Constraints
+- LLMs have finite reasoning capacity and may occasionally generalize or misinterpret complex log sequences.
+- The AI summarization module is strictly advisory:
   - It does **not** alter rule detections.
   - It receives pre-filtered, structured findings rather than unconstrained raw file data.
   - All AI output should be cross-referenced with the raw log evidence provided in the dashboard.

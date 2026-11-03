@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070a12"/>
+      <stop offset="40%" stop-color="#0d1322"/>
+      <stop offset="100%" stop-color="#090e1a"/>
+    </linearGradient>
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="header-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <style>
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; font-size: 22px; fill: #ffffff; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+      .label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; font-weight: 700; fill: #94a3b8; letter-spacing: 0.05em; text-transform: uppercase; }
+      .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 24px; font-weight: 800; fill: #f8fafc; }
+      .text-sub { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: #cbd5e1; }
+      .chip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; fill: #94a3b8; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="680" fill="url(#bg)"/>
+
+  <!-- Top Bar -->
+  <rect x="30" y="24" width="1140" height="64" rx="12" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+  <text x="56" y="63" class="title">🛡️ AI Log Analyzer</text>
+  <rect x="250" y="44" width="130" height="24" rx="12" fill="#0284c7" fill-opacity="0.2" stroke="#38bdf8" stroke-opacity="0.4"/>
+  <text x="264" y="60" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11px" font-weight="700" fill="#38bdf8">GEMINI POWERED</text>
+  
+  <rect x="390" y="44" width="145" height="24" rx="12" fill="#059669" fill-opacity="0.2" stroke="#10b981" stroke-opacity="0.4"/>
+  <text x="404" y="60" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11px" font-weight="700" fill="#34d399">● TELEMETRY LOADED</text>
+  <text x="960" y="61" class="mono" font-size="12px" fill="#94a3b8">Target: <tspan fill="#f1f5f9" font-weight="700">sample_json.jsonl</tspan></text>
+
+  <!-- Metric Cards -->
+  <!-- 1. Lines -->
+  <g transform="translate(30, 108)">
+    <rect width="176" height="84" rx="10" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+    <rect width="176" height="3" rx="1" fill="#38bdf8"/>
+    <text x="16" y="28" class="label">TOTAL LINES</text>
+    <text x="16" y="58" class="num">1,248</text>
+    <text x="16" y="74" class="label" fill="#38bdf8" font-size="10px">Processed</text>
+  </g>
+
+  <!-- 2. Critical -->
+  <g transform="translate(222, 108)">
+    <rect width="176" height="84" rx="10" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+    <rect width="176" height="3" rx="1" fill="#ef4444"/>
+    <text x="16" y="28" class="label">CRITICAL</text>
+    <text x="16" y="58" class="num" fill="#f87171">2</text>
+    <text x="16" y="74" class="label" fill="#ef4444" font-size="10px">2 Outages</text>
+  </g>
+
+  <!-- 3. Errors -->
+  <g transform="translate(414, 108)">
+    <rect width="176" height="84" rx="10" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+    <rect width="176" height="3" rx="1" fill="#f97316"/>
+    <text x="16" y="28" class="label">ERRORS</text>
+    <text x="16" y="58" class="num" fill="#fb923c">5</text>
+    <text x="16" y="74" class="label" fill="#f97316" font-size="10px">5 Unhandled</text>
+  </g>
+
+  <!-- 4. Warnings -->
+  <g transform="translate(606, 108)">
+    <rect width="176" height="84" rx="10" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+    <rect width="176" height="3" rx="1" fill="#eab308"/>
+    <text x="16" y="28" class="label">WARNINGS</text>
+    <text x="16" y="58" class="num" fill="#facc15">8</text>
+    <text x="16" y="74" class="label" fill="#64748b" font-size="10px">Nominal</text>
+  </g>
+
+  <!-- 5. Auth Fails -->
+  <g transform="translate(798, 108)">
+    <rect width="176" height="84" rx="10" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+    <rect width="176" height="3" rx="1" fill="#06b6d4"/>
+    <text x="16" y="28" class="label">AUTH FAILS</text>
+    <text x="16" y="58" class="num" fill="#22d3ee">14</text>
+    <text x="16" y="74" class="label" fill="#64748b" font-size="10px">Nominal</text>
+  </g>
+
+  <!-- 6. Repeated IPs -->
+  <g transform="translate(990, 108)">
+    <rect width="180" height="84" rx="10" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+    <rect width="180" height="3" rx="1" fill="#a855f7"/>
+    <text x="16" y="28" class="label">IP LEADS</text>
+    <text x="16" y="58" class="num" fill="#c084fc">3</text>
+    <text x="16" y="74" class="label" fill="#a855f7" font-size="10px">3 Flagged</text>
+  </g>
+
+  <!-- Visual Analytics Panel -->
+  <g transform="translate(30, 212)">
+    <rect width="1140" height="190" rx="12" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.5"/>
+    <text x="24" y="32" class="label" fill="#cbd5e1" font-size="12px">📊 TELEMETRY DISTRIBUTION &amp; ANOMALY SPREAD</text>
+
+    <!-- Chart 1: Severity Bar Chart -->
+    <text x="24" y="60" class="label" font-size="11px">FINDINGS BY SEVERITY TIER</text>
+    <rect x="24" y="72" width="70" height="18" rx="3" fill="#ef4444"/>
+    <text x="104" y="86" class="chip" fill="#e2e8f0">CRITICAL (2)</text>
+    
+    <rect x="24" y="98" width="140" height="18" rx="3" fill="#f97316"/>
+    <text x="174" y="112" class="chip" fill="#e2e8f0">HIGH (5)</text>
+
+    <rect x="24" y="124" width="220" height="18" rx="3" fill="#eab308"/>
+    <text x="254" y="138" class="chip" fill="#e2e8f0">MEDIUM (9)</text>
+
+    <rect x="24" y="150" width="90" height="18" rx="3" fill="#38bdf8"/>
+    <text x="124" y="164" class="chip" fill="#e2e8f0">LOW (3)</text>
+
+    <!-- Chart 2: Category Breakdown -->
+    <text x="590" y="60" class="label" font-size="11px">EVENTS BY DETECTION CATEGORY</text>
+    <rect x="590" y="72" width="280" height="18" rx="3" fill="#818cf8"/>
+    <text x="880" y="86" class="chip" fill="#e2e8f0">Authentication (14)</text>
+
+    <rect x="590" y="98" width="160" height="18" rx="3" fill="#818cf8"/>
+    <text x="760" y="112" class="chip" fill="#e2e8f0">Database Errors (6)</text>
+
+    <rect x="590" y="124" width="110" height="18" rx="3" fill="#818cf8"/>
+    <text x="710" y="138" class="chip" fill="#e2e8f0">System Error (4)</text>
+
+    <rect x="590" y="150" width="70" height="18" rx="3" fill="#818cf8"/>
+    <text x="670" y="164" class="chip" fill="#e2e8f0">Critical Failure (2)</text>
+  </g>
+
+  <!-- Findings Feed Preview -->
+  <g transform="translate(30, 420)">
+    <!-- Tabs Header -->
+    <rect width="1140" height="42" rx="8" fill="#0f172a" stroke="#334155" stroke-opacity="0.4"/>
+    <rect x="8" y="6" width="170" height="30" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-opacity="0.4"/>
+    <text x="24" y="26" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12px" font-weight="700" fill="#38bdf8">Findings &amp; Evidence</text>
+    <text x="200" y="26" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12px" fill="#94a3b8">AI Executive Summary</text>
+    <text x="370" y="26" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12px" fill="#94a3b8">Raw Log Explorer</text>
+    <text x="520" y="26" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12px" fill="#94a3b8">Export &amp; Reports</text>
+
+    <!-- Finding Card 1 -->
+    <g transform="translate(0, 52)">
+      <rect width="1140" height="88" rx="8" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.6"/>
+      <text x="20" y="28" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13px" font-weight="700" fill="#f8fafc">🔴 [CRITICAL] Database connection pool exhausted: timeout connecting to postgresql:5432 • FINDING-0001</text>
+      
+      <rect x="20" y="44" width="140" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="28" y="60" class="chip">🏷️ DATABASE</text>
+
+      <rect x="170" y="44" width="220" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="178" y="60" class="chip">🛡️ Rule-Database-Connection-Error</text>
+
+      <rect x="400" y="44" width="130" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="408" y="60" class="chip">🌐 192.168.1.50</text>
+
+      <rect x="540" y="44" width="180" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="548" y="60" class="chip">⏱️ 2026-10-29 08:03:00</text>
+    </g>
+
+    <!-- Finding Card 2 -->
+    <g transform="translate(0, 150)">
+      <rect width="1140" height="88" rx="8" fill="url(#card-grad)" stroke="#334155" stroke-opacity="0.6"/>
+      <text x="20" y="28" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13px" font-weight="700" fill="#f8fafc">🟠 [HIGH] Repeated failed logins detected (4 attempts) from IP 192.168.1.105 • FINDING-0002</text>
+      
+      <rect x="20" y="44" width="150" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="28" y="60" class="chip">🏷️ AUTHENTICATION</text>
+
+      <rect x="180" y="44" width="220" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="188" y="60" class="chip">🛡️ Rule-Repeated-Failed-Logins</text>
+
+      <rect x="410" y="44" width="140" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="418" y="60" class="chip">🌐 192.168.1.105</text>
+
+      <rect x="560" y="44" width="230" height="24" rx="4" fill="#0f172a" stroke="#334155" stroke-opacity="0.8"/>
+      <text x="568" y="60" class="chip">⏱️ 2026-10-29 09:00:15 to 09:00:45</text>
+    </g>
+  </g>
+</svg>

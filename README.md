@@ -1,63 +1,59 @@
-# 🛡️ AI-Powered Defensive Log Analyzer
+# AI-Powered Defensive Log Analyzer
 
-An open-source, defensive log analysis workbench for developers, DevOps engineers, and cybersecurity analysts. This tool ingests server and application logs, flags operational errors and suspicious authentication leads using explainable deterministic detection rules, and synthesizes executive triage reports using the **Google Gemini API** (`gemini-2.5-flash`) with resilient local deterministic fallback.
+A Streamlit dashboard for triaging log files with explainable detection rules, Google Gemini summaries, and local deterministic fallback.
+
+![Dashboard Preview](assets/dashboard_preview.svg)
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B.svg)](https://streamlit.io/)
 [![Google Gemini API](https://img.shields.io/badge/Google%20Gemini-API%20Integrated-4285F4.svg)](https://ai.google.dev/)
-[![Tests](https://img.shields.io/badge/tests-47%20passed-brightgreen.svg)]()
+[![Tests](https://github.com/venky099/ai-powered-log-analyzer/actions/workflows/test.yml/badge.svg)](https://github.com/venky099/ai-powered-log-analyzer/actions/workflows/test.yml)
 
 ---
 
-## 📋 Table of Contents
-1. [Project Overview](#-project-overview)
-2. [Key Features](#-key-features)
-3. [Technology Stack](#-technology-stack)
-4. [System Architecture](#-system-architecture)
-5. [Prerequisites](#-prerequisites)
-6. [Quickstart Setup Guide](#-quickstart-setup-guide)
-   - [Windows Setup](#windows-setup)
-   - [Linux & Kali Linux Setup](#linux--kali-linux-setup)
-7. [Google Gemini API Setup](#-google-gemini-api-setup)
-8. [Running the Application](#-running-the-application)
-9. [Automated Testing](#-automated-testing)
-10. [Sample Data & Walkthrough](#-sample-data--walkthrough)
-11. [Troubleshooting](#-troubleshooting)
-12. [Privacy & Security Boundary](#-privacy--security-boundary)
-13. [Limitations & Disclaimers](#-limitations--disclaimers)
-14. [Future Roadmap](#-future-roadmap)
-15. [GitHub Repository Guide](#-github-repository-guide)
+## Table of Contents
+1. [Overview](#overview)
+2. [Key Features](#key-features)
+3. [Technology Stack](#technology-stack)
+4. [System Architecture](#system-architecture)
+5. [Quickstart Setup](#quickstart-setup)
+6. [Configuring Google Gemini](#configuring-google-gemini)
+7. [Running the Application](#running-the-application)
+8. [Automated Testing](#automated-testing)
+9. [Sample Data & Walkthrough](#sample-data--walkthrough)
+10. [Privacy & Security Controls](#privacy--security-controls)
+11. [What I Learned & Known Issues](#what-i-learned--known-issues)
+12. [Limitations & Disclaimers](#limitations--disclaimers)
+13. [Roadmap](#roadmap)
 
 ---
 
-## 🔍 Project Overview
+## Overview
 
-Production logs contain high-value operational signals, but manual inspection across thousands of lines is error-prone. 
+Production logs contain critical operational signals, but manual inspection across thousands of lines is slow and error-prone. This project pairs deterministic rule detection with optional LLM summarization:
 
-The **AI-Powered Log Analyzer** addresses this by pairing:
-1. **Deterministic Rule Detection:** Instant, explainable identification of `CRITICAL`, `FATAL`, `ERROR`, `WARNING`, database drops, and repeated authentication anomalies.
-2. **Google Gemini AI Inference:** High-intelligence synthesis using Google Gemini (`gemini-2.5-flash`, `gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-2.5-pro`), transforming structured telemetry into actionable executive summaries.
-3. **Resilient Fallback Engine:** When the Gemini API key is unconfigured or network issues arise, the analyzer automatically provides a deterministic executive summary with no downtime or feature degradation.
-
----
-
-## ✨ Key Features
-
-- **🛡️ Explainable Detection Rules:** Evaluates logs against transparent heuristics rather than unverified "black-box" classifications.
-- **📦 Multi-Format Ingestion:** Seamlessly parses unstructured syslogs as well as structured JSON-lines (`.json`, `.jsonl`, Bunyan, ECS, Pino, Zap).
-- **🔢 Strict IPv4 Extraction & Grouping:** Distinguishes valid IPv4 addresses from version numbers and timestamps, grouping failed logins by source IP against configurable thresholds.
-- **📊 Visual Analytics & Distributions:** Interactive Altair charts rendering findings by severity and category distributions.
-- **🔒 Prompt-Injection Defenses:** Treats all log contents as untrusted data wrapped in `<log_evidence>` security barriers to prevent instruction hijacking.
-- **🧠 Google Gemini API Integration:** Fast, high-accuracy analysis powered by official `google-genai` SDK with customizable model identifiers and live key input in the UI.
-- **📊 Interactive Streamlit Dashboard:** Instant metric cards, severity and category filtering, full-text search, and expandable evidence cards.
-- **📥 Secure Export Capabilities:**
-  - **CSV Export:** RFC 4180 compliant with formula injection protection (`=, +, -, @` escaping).
-  - **Text / Markdown Investigation Reports:** Ready for incident ticketing and post-mortem logs.
+1. **Deterministic Rule Detection:** Evaluates lines for critical events, application errors, warnings, database drops, and repeated authentication failures grouped by source IP.
+2. **AI Executive Summaries:** Generates concise triage narratives using Google Gemini (`gemini-2.5-flash`, `gemini-1.5-flash`, or custom models) via the official `google-genai` SDK.
+3. **Deterministic Fallback:** If Gemini isn't configured, it falls back to a template summary built from the rule results with zero network requests.
 
 ---
 
-## 🛠️ Technology Stack
+## Key Features
+
+- **Explainable Rules:** Transparent heuristics produce discrete findings with evidence lines, timestamps, and investigation steps.
+- **Multi-Format Ingestion:** Parses unstructured syslogs as well as structured JSON-lines (`.json`, `.jsonl`, Bunyan, ECS, Pino, Zap).
+- **Strict IPv4 Validation:** Distinguishes valid IPv4 addresses from version numbers (e.g. `v1.2.3.4`), timestamps, and malformed octets, grouping repeated failed logins by source IP.
+- **Visual Analytics:** Altair bar charts display findings by severity and category.
+- **Prompt Injection Defense:** Strips `<` and `>` delimiters from untrusted log text and wraps findings in `<log_evidence>` security barriers to reduce the risk of tag breakout.
+- **Safe HTML Rendering:** User-influenced strings (timestamps, filenames, categories, IP addresses) are escaped with `html.escape()` before rendering.
+- **Export Capabilities:**
+  - **CSV Export:** Formula-injection protected (`=`, `+`, `-`, `@` escaped) following RFC 4180.
+  - **Text Report:** Clean investigation summary ready for incident tickets.
+
+---
+
+## Technology Stack
 
 | Component | Technology | Purpose |
 | :--- | :--- | :--- |
@@ -65,16 +61,17 @@ The **AI-Powered Log Analyzer** addresses this by pairing:
 | **UI Dashboard** | Streamlit | Web interface and interactive filtering |
 | **Data Processing** | pandas | Tabular data representation and filtering |
 | **Visualizations** | Altair | Telemetry distribution charts |
-| **AI Engine** | Google Gemini API (`gemini-2.5-flash`) | Executive triage summarization via `google-genai` |
+| **AI Engine** | Google Gemini API | Triage summarization via `google-genai` |
+| **Environment** | python-dotenv | Configuration via `.env` file |
 | **Testing** | pytest | Automated unit and integration testing |
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TD
-    A[Log File .log / .txt / .jsonl] --> B[Log Parser\nsrc/log_parser.py]
+    A[Log File: .log / .txt / .jsonl] --> B[Log Parser\nsrc/log_parser.py]
     B --> C[Detection Engine\nsrc/detectors.py]
     B --> D[Metrics Aggregation\nsrc/analyzer.py]
     C --> D
@@ -87,28 +84,21 @@ flowchart TD
     H --> J[Text Report\nsrc/report_generator.py]
 ```
 
-Detailed architectural specifications and component boundaries are documented in [`docs/ARCHITECTURE.md`](file:///C:/Users/DELL/project/res/docs/ARCHITECTURE.md).
+Detailed architectural specifications and component boundaries are documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ---
 
-## 📦 Prerequisites
-
-- Python 3.11 or higher
-- Git (recommended for version control)
-- *(Optional)* [Google AI Studio API Key](https://aistudio.google.com/app/apikey) for Gemini AI summarization
-
----
-
-## 🚀 Quickstart Setup Guide
+## Quickstart Setup
 
 ### Windows Setup
 
-1. **Clone or navigate to the workspace:**
+1. **Clone the repository:**
    ```powershell
-   cd C:\Users\DELL\project\res
+   git clone https://github.com/venky099/ai-powered-log-analyzer.git
+   cd ai-powered-log-analyzer
    ```
 
-2. **Create and activate a virtual environment:**
+2. **Create and activate virtual environment:**
    ```powershell
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
@@ -118,6 +108,7 @@ Detailed architectural specifications and component boundaries are documented in
 3. **Install dependencies:**
    ```powershell
    pip install -r requirements.txt
+   pip install -r requirements-dev.txt
    ```
 
 4. **(Optional) Configure environment variables:**
@@ -127,9 +118,9 @@ Detailed architectural specifications and component boundaries are documented in
 
 ---
 
-### Linux & Kali Linux Setup
+### Linux Setup
 
-1. **Clone repository & navigate into folder:**
+1. **Clone repository and navigate into folder:**
    ```bash
    git clone https://github.com/venky099/ai-powered-log-analyzer.git
    cd ai-powered-log-analyzer
@@ -144,6 +135,7 @@ Detailed architectural specifications and component boundaries are documented in
 3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
+   pip install -r requirements-dev.txt
    ```
 
 4. **Copy default configuration:**
@@ -153,129 +145,111 @@ Detailed architectural specifications and component boundaries are documented in
 
 ---
 
-## 🔑 Google Gemini API Setup
+## Configuring Google Gemini
 
-The application works completely out of the box **with or without** a Gemini API key using its built-in deterministic fallback engine.
+The application works out of the box with or without an API key using the deterministic fallback engine.
 
-To enable Gemini AI executive summaries:
+To enable Gemini AI summaries:
 
-1. **Get an API Key:**
-   - Create a free Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. **Configure Your API Key:**
-   - **Option A (Environment):** Paste your key into `.env`:
+1. Create a free API key at [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Configure your key via either method:
+   - **Environment file:** Set `GEMINI_API_KEY` in `.env`:
      ```bash
-     GEMINI_API_KEY=your_gemini_api_key_here
+     GEMINI_API_KEY=your_key_here
      GEMINI_MODEL=gemini-2.5-flash
      ```
-   - **Option B (Dashboard UI):** Enter the key directly into the sidebar text box in the web dashboard.
-3. In the Streamlit sidebar, the status indicator will turn green: `🟢 Gemini Ready (gemini-2.5-flash)`.
+   - **Dashboard sidebar:** Enter the key directly into the password box in the web interface.
 
 ---
 
-## 🖥️ Running the Application
+## Running the Application
 
-Launch the Streamlit web dashboard with:
+Launch the Streamlit dashboard:
 
 ```bash
-# Windows
-.\.venv\Scripts\streamlit run app.py
-
-# Linux / Kali
 streamlit run app.py
 ```
 
-The application will launch in your default web browser at `http://localhost:8501`.
+The web dashboard opens at `http://localhost:8501`.
 
 ### How to Use the Dashboard
-1. **Upload or Load Sample:** Upload your `.log`, `.txt`, `.json`, or `.jsonl` file via the sidebar, or click **📄 Text Log** / **📦 JSON Log** to test synthetic telemetry.
-2. **Review Metrics:** View high-level cards displaying Total Lines, Critical Events, Errors, Warnings, and Repeated IP Leads.
-3. **Filter Findings:** Use the dropdowns in the **Findings & Evidence** tab to filter by severity (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) or search by IP/keyword.
-4. **Inspect Evidence:** Click any finding expander to examine the exact raw log lines and timestamps.
-5. **Generate AI Summary:** Go to the **AI Executive Summary** tab and click **⚡ Generate AI Summary** for automated triage suggestions synthesized by Google Gemini.
-6. **Download Reports:** Navigate to **Export & Reports** to download RFC 4180 CSV findings or text reports.
+1. **Load Data:** Upload your `.log`, `.txt`, `.json`, or `.jsonl` file, or click **Text Log** / **JSON Log** to test built-in sample logs.
+2. **Review Metrics:** Check cards for Total Lines, Critical Events, Errors, Warnings, and Flagged IP Leads.
+3. **Filter Findings:** In the **Findings & Evidence** tab, filter by severity tier or search by keyword/IP.
+4. **Generate AI Summary:** In the **AI Executive Summary** tab, click **Generate AI Summary** for automated synthesis.
+5. **Download Reports:** Go to **Export & Reports** to download sanitized CSV findings or text investigation logs.
 
 ---
 
-## 🧪 Automated Testing
+## Automated Testing
 
-The project includes a comprehensive test suite covering empty inputs, Unicode resilience, timestamp parsing, CSV formula escaping, threshold triggers, and mock Gemini API failures/fallbacks.
-
-Run all tests via pytest:
+Run the full pytest suite:
 
 ```bash
-# Windows
-.\.venv\Scripts\pytest -v
-
-# Linux / Kali
 pytest -v
 ```
 
 ### Test Coverage Highlights:
-- ✅ Malformed & Non-UTF8 decoding (`safe_read_bytes`)
-- ✅ Strict IPv4 validation & version number rejection
-- ✅ Critical, Fatal, Warning, Error, and Database heuristics
-- ✅ Repeated authentication threshold grouping by IP
-- ✅ CSV Formula Injection sanitization (`=cmd`, `@SUM`, etc.)
-- ✅ Gemini API generation, empty response, HTTP 400, HTTP 404, HTTP 429 quota, and timeout fallback
-- ✅ Backwards compatibility alias (`OllamaSummarizer`)
+- Safe byte decoding (UTF-8, UTF-8 BOM, UTF-16, Latin-1 fallback).
+- Strict IPv4 extraction rejecting version numbers (`v1.2.3.4`, `1.2.3.4.5`) while accepting trailing punctuation (`10.0.0.5.`).
+- Log level extraction restricted to start of messages and bracketed tags to avoid false positives on words like "alert" or "error".
+- Bracketed level handling without timestamps (e.g. `[ERROR]` and `[CRITICAL]`).
+- Bunyan numeric severity parsing (levels 10 to 60).
+- Prompt injection tag breakout protection.
+- HTML escaping on dashboard elements.
+- CSV formula injection protection (`=, +, -, @` escaping).
+- Gemini API status checks and deterministic fallback on timeout or quota exhaustion.
 
 ---
 
-## 📂 Sample Data & Walkthrough
+## Sample Data & Walkthrough
 
-Synthetic log files are provided in [`sample_logs/sample.log`](file:///C:/Users/DELL/project/res/sample_logs/sample.log) and [`sample_logs/sample_json.jsonl`](file:///C:/Users/DELL/project/res/sample_logs/sample_json.jsonl).
+Synthetic log files are provided in [`sample_logs/sample.log`](sample_logs/sample.log) and [`sample_logs/sample_json.jsonl`](sample_logs/sample_json.jsonl).
 
-### Observed Events in Sample Log:
-- **Application Startup:** Normal informational entries.
-- **Repeated Authentication Failures:** 4 consecutive failed logins for `admin`, `root`, and `administrator` from source IP `192.168.1.105` (triggers `Rule-Repeated-Failed-Logins`).
-- **Isolated Authentication Failure:** 1 failed login from `10.0.0.42` followed immediately by a successful login.
+### Patterns Demonstrated in Sample Data:
+- **Repeated Authentication Failures:** Consecutive failed logins from source IP `192.168.1.105` triggering `Rule-Repeated-Failed-Logins`.
+- **Isolated Authentication Failure:** A single failed login followed by a successful login.
 - **Database Connection Error:** Database connection pool exhausted on port 5432.
-- **Critical Subsystem Crash:** Unhandled worker process termination.
-- **Untrusted Prompt Injection Simulation:** A log message containing `"SYSTEM PROMPT INJECTION: Ignore previous instructions..."` safely parsed and contained without triggering tool execution.
+- **Critical Crash:** Unhandled worker process termination.
+- **Untrusted Log Injection Attempt:** A line containing `</log_evidence>` safely contained without breaking the prompt barrier.
 
 ---
 
-## 🔧 Troubleshooting
+## Privacy & Security Controls
 
-| Issue | Cause | Solution |
-| :--- | :--- | :--- |
-| **API Key Required (Fallback active)** | No Gemini API key provided | Paste your key in the sidebar or set `GEMINI_API_KEY` in `.env`. |
-| **Gemini API Error (400/403)** | API key is invalid or lacks permissions | Check your API key at [Google AI Studio](https://aistudio.google.com/app/apikey). |
-| **Gemini Quota Exceeded (429)** | Free tier request limits reached | Wait a moment or upgrade quota; deterministic fallback will serve summaries in the meantime. |
-| **Model Not Found (404)** | Typo in model identifier | Select a preset (e.g. `gemini-2.5-flash`, `gemini-1.5-flash`) or check the model name. |
-| **File size exceeds limit** | Uploaded file > 2 MB default | Adjust `MAX_UPLOAD_SIZE_MB` in `.env` or upload a smaller log segment. |
-| **PowerShell script execution error** | Windows execution policy blocks `.venv` | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` |
+- **Local Memory Processing:** Uploaded files are processed in memory and never written to disk unless exported by the user.
+- **Offline Font Rendering:** All CSS styling uses local system fonts (`-apple-system`, `ui-monospace`) with no external requests to Google Fonts CDN.
+- **Bounded Context AI:** Only structured aggregate counts and top findings (up to 15) are sent to the Gemini API, never full multi-megabyte log files.
+- **Prompt Injection Hardening:** Angle brackets (`<`, `>`) are stripped from log text to prevent closing-tag breakouts inside the `<log_evidence>` prompt envelope.
+- **HTML Injection Defense:** All dynamic text inserted into HTML components is wrapped with `html.escape()`.
 
 ---
 
-## 🔒 Privacy & Security Boundary
+## What I Learned & Known Issues
 
-- **Local Memory Processing:** Uploaded logs are processed transiently in memory; logs are never permanently stored on disk unless explicitly exported by the user.
-- **Bounded Context AI:** Only structured aggregated metrics and a bounded subset of findings (up to 15) are transmitted to the Gemini API, rather than dumping raw multi-megabyte log streams.
-- **Defensive Prompt Engineering:** Findings are wrapped in `<log_evidence>` security barriers to defend against log injection attacks.
+### What I Learned
+- **Regex Boundary Surprises:** Simple `\b` word boundaries fail on version numbers (`v1.2.3.4`) and sentence-ending periods (`from 10.0.0.5.`). Using explicit lookaround assertions `(?<![\w.\-])(?:\d{1,3}\.){3}\d{1,3}(?![\w]|\.[a-zA-Z0-9])` handles both accurately.
+- **Bracket Ambiguity:** A bracketed token pattern `^\[(.*?)\]` will greedily swallow `[ERROR]` or `[CRITICAL]` as timestamps unless validated against date/time separators and digit requirements.
+- **Prompt Injection Defense in Depth:** Enclosing untrusted user input in XML tags (`<log_evidence>`) is insufficient if the input itself contains `</log_evidence>`. Stripping the delimiter characters before prompt assembly neutralizes tag-closing attacks.
+- **UI Security:** Calling `unsafe_allow_html=True` in Streamlit is necessary for custom card components, but every single interpolated value (even timestamps or filenames) must pass through `html.escape()`.
+
+### Known Issues & Trade-offs
+- **Single Log Scope:** A single log file cannot prove malicious intent; repeated failed logins can be caused by misconfigured cron jobs, VPN proxies, or forgotten credentials.
+- **Heuristic Boundaries:** Non-standard timestamp formats or custom application logs without standard levels may be classified as general informational text.
 
 ---
 
-## ⚠️ Limitations & Disclaimers
+## Limitations & Disclaimers
 
-For a detailed breakdown of false-positive risks and architectural boundaries, see [`docs/LIMITATIONS.md`](file:///C:/Users/DELL/project/res/docs/LIMITATIONS.md).
+For a detailed breakdown of false-positive risks and architectural boundaries, see [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md).
 
 > **Disclaimer:** This tool is designed for educational triage and initial investigation support. It is **not** an enterprise SIEM or automated incident responder. A repeated failed login finding is an **investigation lead**, not definitive proof of an intrusion.
 
 ---
 
-## 🔮 Future Roadmap
+## Roadmap
 
-- [ ] Support for custom endpoint proxies for enterprise VPC deployments.
-- [ ] Timeline visualization of event spikes using Altair / Streamlit charts.
-- [ ] Integration with threat intelligence lists (RFC 1918 vs public bogon filtering).
-- [ ] Multi-file correlation across frontend and backend log streams.
-
----
-
-## 🐙 GitHub Repository Guide
-
-### Suggested Repository Details:
-- **Repository Name:** `ai-powered-log-analyzer`
-- **Short Description:** *Defensive log analyzer and triage dashboard with explainable detection rules, Google Gemini API summarization, and deterministic fallback.*
-- **Suggested Topics:** `cybersecurity`, `log-analyzer`, `incident-response`, `gemini-api`, `streamlit`, `python`, `threat-detection`, `defensive-security`
+- [x] Multi-format JSON and JSON-lines log ingestion (`.json`, `.jsonl`, Bunyan, ECS).
+- [ ] Timeline visualization of event spikes over time.
+- [ ] Threat intelligence lookup for public IPv4 addresses (RFC 1918 filtering).
+- [ ] Multi-file correlation across frontend and backend services.

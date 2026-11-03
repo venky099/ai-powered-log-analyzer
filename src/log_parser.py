@@ -344,24 +344,18 @@ def parse_log_line(line_number: int, raw_line: str, max_line_length: int = 4096)
             event_type="EMPTY",
         )
 
-    # 0. Check for JSON structured log entry
     json_entry = _try_parse_json_log(line_number, cleaned_line, bounded_line)
     if json_entry is not None:
         return json_entry
 
-    # 1. Extract Timestamp
     ts, remaining = extract_timestamp(cleaned_line)
 
-    # 2. Extract Severity
     sev = extract_severity(remaining if ts else cleaned_line)
 
-    # 3. Extract Valid IPv4
     ip = extract_valid_ipv4(cleaned_line)
 
-    # 4. Classify event pattern
     event_type = classify_event_pattern(cleaned_line)
 
-    # Message is the cleaned line or remaining after timestamp
     message = remaining if ts and remaining else cleaned_line
 
     return ParsedLogEntry(
