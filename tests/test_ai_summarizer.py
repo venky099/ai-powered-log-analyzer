@@ -182,3 +182,13 @@ def test_ollama_summarizer_alias_compatibility(sample_analysis_result):
             res = summarizer.generate_summary(sample_analysis_result)
             assert not res.is_ai_generated
             assert "Rule-Based Executive Summary" in res.summary_text
+
+def test_load_env_integration(tmp_path):
+    """Verify load_dotenv loads configuration from .env file."""
+    env_file = tmp_path / ".env"
+    env_file.write_text("TEST_CUSTOM_ENV_KEY=sample_value_1234\n", encoding="utf-8")
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=str(env_file), override=True)
+    import os
+    assert os.getenv("TEST_CUSTOM_ENV_KEY") == "sample_value_1234"
+

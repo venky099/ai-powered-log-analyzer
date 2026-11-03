@@ -15,12 +15,15 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from dotenv import load_dotenv
+
+# Ensure .env is loaded on startup
+load_dotenv()
+
 from src.ai_summarizer import GeminiSummarizer, OllamaSummarizer, _load_env_file
 from src.analyzer import AnalysisResult, LogAnalyzer
 from src.report_generator import generate_csv_report, generate_text_report
 
-# Ensure .env is loaded on startup and on rerun
-_load_env_file()
 
 # Configuration defaults
 DEFAULT_MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "2"))
@@ -530,8 +533,7 @@ def main():
         """,
         unsafe_allow_html=True,
     )
-    _load_env_file()
-    configured_env_key = os.getenv("GEMINI_API_KEY", "").strip()
+        configured_env_key = os.getenv("GEMINI_API_KEY", "").strip()
     gemini_api_key = st.sidebar.text_input(
         "Gemini API Key",
         value=configured_env_key,

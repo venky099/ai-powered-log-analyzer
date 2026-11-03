@@ -18,31 +18,14 @@ from google.genai import errors, types
 from src.analyzer import AnalysisResult
 
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 def _load_env_file():
-    """Load key-value pairs from .env into os.environ."""
-    env_paths = [
-        Path(".env"),
-        Path(__file__).resolve().parent / ".env",
-        Path(__file__).resolve().parent.parent / ".env",
-    ]
-    for path in env_paths:
-        if path.is_file():
-            try:
-                for line in path.read_text(encoding="utf-8").splitlines():
-                    line = line.strip()
-                    if not line or line.startswith("#") or "=" not in line:
-                        continue
-                    key, _, val = line.partition("=")
-                    key = key.strip()
-                    val = val.strip().strip("'\"")
-                    if key and val:
-                        os.environ[key] = val
-                break
-            except Exception:
-                pass
-
-
-_load_env_file()
+    """Load environment variables from .env file using python-dotenv."""
+    load_dotenv()
 
 
 @dataclass
