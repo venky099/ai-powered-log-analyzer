@@ -84,3 +84,22 @@ def test_generate_text_report_unicode():
 
     report = generate_text_report(res)
     assert "Rocket subsystem failed" in report
+
+def test_html_escaping_for_dashboard_elements():
+    """HTML elements in timestamps, filenames, and findings must be escaped."""
+    import html
+    malicious_ts = "<b style='color:red'>FAKE</b>"
+    malicious_filename = "<script>alert(1)</script>.log"
+    malicious_step = "<img src=x onerror=alert(2)>"
+
+    escaped_ts = html.escape(malicious_ts)
+    escaped_filename = html.escape(malicious_filename)
+    escaped_step = html.escape(malicious_step)
+
+    assert "<b" not in escaped_ts
+    assert "&lt;b style=&#x27;color:red&#x27;&gt;FAKE&lt;/b&gt;" in escaped_ts
+    assert "<script>" not in escaped_filename
+    assert "&lt;script&gt;" in escaped_filename
+    assert "<img" not in escaped_step
+    assert "&lt;img" in escaped_step
+

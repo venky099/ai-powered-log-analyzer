@@ -7,6 +7,7 @@ distributions, structured JSON-lines support, and Google Gemini AI summarization
 
 from __future__ import annotations
 
+import html
 import os
 from pathlib import Path
 from typing import Optional
@@ -342,15 +343,19 @@ def run_analysis(content_bytes: bytes, filename: str, threshold: int):
 
 def render_metric_card(label: str, value: str | int, icon: str, color_hex: str, delta: Optional[str] = None):
     """Render a compact glassmorphic metric card."""
-    delta_html = f"<div class='metric-delta' style='color: {color_hex};'>{delta}</div>" if delta else "<div class='metric-delta' style='color: #64748b;'>Nominal</div>"
+    safe_label = html.escape(str(label))
+    safe_value = html.escape(str(value))
+    safe_delta = html.escape(str(delta)) if delta else "Nominal"
+    delta_color = color_hex if delta else "#64748b"
+    delta_html = f"<div class='metric-delta' style='color: {delta_color};'>{safe_delta}</div>"
     card_html = f"""
     <div class="metric-card">
         <div class="metric-card-accent" style="background: {color_hex};"></div>
         <div class="metric-header">
-            <span class="metric-label">{label}</span>
+            <span class="metric-label">{safe_label}</span>
             <span class="metric-icon">{icon}</span>
         </div>
-        <div class="metric-value">{value}</div>
+        <div class="metric-value">{safe_value}</div>
         {delta_html}
     </div>
     """
@@ -595,7 +600,8 @@ def main():
     result: Optional[AnalysisResult] = st.session_state.analysis_result
 
     # Modern Top Navigation Bar
-    active_filename = result.filename if result else "No File Loaded"
+    raw_filename = result.filename if result else "No File Loaded"
+    active_filename = html.escape(raw_filename)
     status_badge = (
         '<span class="badge-pill badge-pill-success">● Telemetry Loaded</span>'
         if result
@@ -707,16 +713,22 @@ def main():
                 card_title = f"{sev_icon} [{f.severity}] {f.summary}  •  {f.finding_id}"
                 with st.expander(card_title):
                     meta1, meta2, meta3, meta4 = st.columns(4)
-                    meta1.markdown(f"<div class='alert-meta-chip'>🏷️ {f.category}</div>", unsafe_allow_html=True)
-                    meta2.markdown(f"<div class='alert-meta-chip'>🛡️ {f.rule_name}</div>", unsafe_allow_html=True)
-                    meta3.markdown(f"<div class='alert-meta-chip'>🌐 {f.source_ip or 'No IP'}</div>", unsafe_allow_html=True)
-                    meta4.markdown(f"<div class='alert-meta-chip'>⏱️ {f.timestamp or 'No Timestamp'}</div>", unsafe_allow_html=True)
+                    safe_cat = html.escape(str(f.category))
+                    safe_rule = html.escape(str(f.rule_name))
+                    safe_ip = html.escape(str(f.source_ip or 'No IP'))
+                    safe_ts = html.escape(str(f.timestamp or 'No Timestamp'))
+                    safe_step = html.escape(str(f.recommended_step))
+
+                    meta1.markdown(f"<div class='alert-meta-chip'>🏷️ {safe_cat}</div>", unsafe_allow_html=True)
+                    meta2.markdown(f"<div class='alert-meta-chip'>🛡️ {safe_rule}</div>", unsafe_allow_html=True)
+                    meta3.markdown(f"<div class='alert-meta-chip'>🌐 {safe_ip}</div>", unsafe_allow_html=True)
+                    meta4.markdown(f"<div class='alert-meta-chip'>⏱️ {safe_ts}</div>", unsafe_allow_html=True)
 
                     st.markdown(
                         f"""
                         <div class="alert-triage-box" style="background: rgba(15, 23, 42, 0.6); border-left: 3px solid {sev_color}; padding: 10px 14px; border-radius: 6px; margin: 10px 0;">
                             <div class="alert-triage-title">Recommended Triage</div>
-                            <div class="alert-triage-body">{f.recommended_step}</div>
+                            <div class="alert-triage-body">{safe_step}</div>
                         </div>
                         """,
                         unsafe_allow_html=True,
