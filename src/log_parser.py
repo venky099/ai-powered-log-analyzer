@@ -49,9 +49,10 @@ _TIMESTAMP_PATTERNS = [
     re.compile(
         r"^(?P<ts>\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)"
     ),
-    # Syslog-like: Oct 29 09:10:01 or Oct  9 09:10:01
+    # Syslog-like: Oct 29 09:10:01 or Oct  9 09:10:01 (validated calendar month)
     re.compile(
-        r"^(?P<ts>[A-Za-z]{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})"
+        r"^(?P<ts>(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})",
+        re.IGNORECASE,
     ),
     # Slash date: 29/10/2026 09:10:01 or 10/29/2026 09:10:01
     re.compile(
@@ -62,6 +63,12 @@ _TIMESTAMP_PATTERNS = [
         r"^\[(?P<ts>[^\]]+)\]"
     ),
 ]
+
+# Web log timestamp pattern (e.g. Apache/Nginx [10/Oct/2026:13:55:36 +0000])
+_WEB_LOG_TIMESTAMP_PATTERN = re.compile(
+    r"\[(?P<ts>\d{2}/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/\d{4}:\d{2}:\d{2}:\d{2}(?:\s+[+-]\d{4})?)\]",
+    re.IGNORECASE,
+)
 
 # Severity keyword mappings
 _SEVERITY_KEYWORDS = {
@@ -104,6 +111,9 @@ _FAILED_LOGIN_PATTERNS = [
     re.compile(r"invalid\s+(?:password|user|credentials)", re.IGNORECASE),
     re.compile(r"failed\s+password", re.IGNORECASE),
     re.compile(r"auth(?:entication)?\s+failure", re.IGNORECASE),
+    # HTTP 401 Unauthorized on authentication endpoints
+    re.compile(r'(?:POST|GET)\s+[^\"]*?(?:login|auth|session|signin)[^\"]*?\s+HTTP/[0-9.]+\"\s+401\b', re.IGNORECASE),
+    re.compile(r'/(?:login|auth|session|signin)\b[^\"]*\"?\s+401\b', re.IGNORECASE),
 ]
 
 _SUCCESS_LOGIN_PATTERNS = [
@@ -111,7 +121,12 @@ _SUCCESS_LOGIN_PATTERNS = [
     re.compile(r"login\s+successful", re.IGNORECASE),
     re.compile(r"accepted\s+password", re.IGNORECASE),
     re.compile(r"authentication\s+succeeded", re.IGNORECASE),
+    # HTTP 200 OK on login endpoints
+    re.compile(r'\"POST\s+[^\"]*?(?:login|session|signin)[^\"]*?\"\s+200\b', re.IGNORECASE),
 ]
+
+# HTTP 5xx Server Error status code pattern in web logs
+_HTTP_5XX_PATTERN = re.compile(r'HTTP/[0-9.]+"\s+50[0-4]\b', re.IGNORECASE)
 
 
 def safe_read_bytes(raw_bytes: bytes) -> str:
@@ -147,14 +162,25 @@ def safe_read_bytes(raw_bytes: bytes) -> str:
 
 
 def extract_valid_ipv4(text: str) -> Optional[str]:
-    """Extract and strictly validate an IPv4 address from text."""
+    """Extract and strictly validate an IPv4 address from text.
+
+    Prefers host/client addresses over unspecified bind addresses (0.0.0.0)
+    or broadcast addresses (255.255.255.255) when multiple IPs are present.
+    """
+    first_fallback = None
     for m in _IPV4_PATTERN.finditer(text):
         try:
-            return str(ipaddress.IPv4Address(m.group()))
+            ip_obj = ipaddress.IPv4Address(m.group())
+            ip_str = str(ip_obj)
+            if ip_obj.is_unspecified or ip_str == "255.255.255.255":
+                if first_fallback is None:
+                    first_fallback = ip_str
+                continue
+            return ip_str
         except ipaddress.AddressValueError:
             continue
 
-    return None
+    return first_fallback
 
 
 def _is_valid_bracketed_timestamp(cand: str) -> bool:
@@ -169,7 +195,7 @@ def _is_valid_bracketed_timestamp(cand: str) -> bool:
 
 
 def extract_timestamp(text: str) -> Tuple[Optional[str], str]:
-    """Extract a timestamp from the start of a log line if present.
+    """Extract a timestamp from the start of a log line or web log format if present.
 
     Args:
         text: The line text.
@@ -190,6 +216,14 @@ def extract_timestamp(text: str) -> Tuple[Optional[str], str]:
             remaining = re.sub(r"^[\s\-:\]|]+", "", remaining).strip()
             return ts, remaining
 
+    # Fallback: check for Apache/Nginx CLF bracketed timestamp anywhere in line
+    web_match = _WEB_LOG_TIMESTAMP_PATTERN.search(stripped)
+    if web_match:
+        ts = web_match.group("ts").strip()
+        remaining = (stripped[:web_match.start()] + stripped[web_match.end():]).strip()
+        remaining = re.sub(r"\s+", " ", remaining).strip()
+        return ts, remaining
+
     return None, stripped
 
 
@@ -206,6 +240,9 @@ def extract_severity(text: str) -> Optional[str]:
     kv_match = _KEYVALUE_SEVERITY_PATTERN.search(text)
     if kv_match:
         return _SEVERITY_KEYWORDS.get(kv_match.group(1).upper())
+
+    if _HTTP_5XX_PATTERN.search(text):
+        return "ERROR"
 
     return None
 

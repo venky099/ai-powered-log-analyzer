@@ -214,3 +214,26 @@ def test_prompt_injection_closing_tag_sanitization(sample_analysis_result):
     assert "</log_evidence>" not in bounded
     assert "/log_evidence" in bounded
 
+
+def test_gemini_thinking_config_selectivity(sample_analysis_result):
+    """Thinking config should only be configured for 2.5 or thinking models to avoid HTTP 400."""
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = "Summary report"
+    mock_client.models.generate_content.return_value = mock_response
+
+    with patch("google.genai.Client", return_value=mock_client):
+        # 1. Standard model without thinking budget (e.g. gemini-1.5-flash)
+        summarizer_15 = GeminiSummarizer(api_key="valid-test-key", model="gemini-1.5-flash")
+        summarizer_15.generate_summary(sample_analysis_result)
+        call_kwargs_15 = mock_client.models.generate_content.call_args[1]
+        config_15 = call_kwargs_15.get("config")
+        assert getattr(config_15, "thinking_config", None) is None
+
+        # 2. Thinking-supported model (e.g. gemini-2.5-flash)
+        summarizer_25 = GeminiSummarizer(api_key="valid-test-key", model="gemini-2.5-flash")
+        summarizer_25.generate_summary(sample_analysis_result)
+        call_kwargs_25 = mock_client.models.generate_content.call_args[1]
+        config_25 = call_kwargs_25.get("config")
+        assert getattr(config_25, "thinking_config", None) is not None
+

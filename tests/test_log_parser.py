@@ -46,6 +46,13 @@ def test_extract_valid_ipv4_success():
     assert extract_valid_ipv4("v1.2.3.4 then from 1.2.3.4") == "1.2.3.4"
 
 
+def test_extract_valid_ipv4_prefers_host_over_unspecified():
+    """Unspecified bind address 0.0.0.0 and broadcast 255.255.255.255 should not mask real client IPs."""
+    assert extract_valid_ipv4("Listening on 0.0.0.0:8080 from 192.168.1.5") == "192.168.1.5"
+    assert extract_valid_ipv4("Packet from 255.255.255.255 originated at 10.0.0.2") == "10.0.0.2"
+    assert extract_valid_ipv4("Server bound to 0.0.0.0 only") == "0.0.0.0"
+
+
 def test_extract_valid_ipv4_invalid_octets():
     """Invalid IP octets should be rejected."""
     assert extract_valid_ipv4("Connection attempt from 999.999.999.999") is None
@@ -73,6 +80,29 @@ def test_extract_timestamp_bracketed():
     ts, remaining = extract_timestamp(line)
     assert ts == "2026-10-29 09:10:01"
     assert remaining == "ERROR Disk failure"
+
+
+def test_extract_timestamp_syslog_month_validation():
+    """Syslog timestamps must only match valid calendar months."""
+    ts_oct, rem_oct = extract_timestamp("Oct 29 09:10:01 myhost sshd[123]: session opened")
+    assert ts_oct == "Oct 29 09:10:01"
+    assert rem_oct == "myhost sshd[123]: session opened"
+
+    ts_invalid, rem_invalid = extract_timestamp("Foo 29 09:10:01 arbitrary message")
+    assert ts_invalid is None
+    assert rem_invalid == "Foo 29 09:10:01 arbitrary message"
+
+
+def test_extract_timestamp_web_log_bracketed():
+    """Apache/Nginx CLF bracketed timestamps must be extracted cleanly."""
+    line = '127.0.0.1 - - [10/Oct/2026:13:55:36 -0700] "GET /index.html HTTP/1.1" 200 2326'
+    ts, remaining = extract_timestamp(line)
+    assert ts == "10/Oct/2026:13:55:36 -0700"
+    assert '127.0.0.1 - - "GET /index.html HTTP/1.1" 200 2326' in remaining
+
+    entry = parse_log_line(1, line)
+    assert entry.timestamp == "10/Oct/2026:13:55:36 -0700"
+    assert entry.ip_address == "127.0.0.1"
 
 
 def test_extract_timestamp_missing_or_malformed():
@@ -109,6 +139,16 @@ def test_ordinary_words_not_read_as_log_levels():
     assert entry2.severity is None
 
 
+def test_extract_severity_http_5xx():
+    """HTTP 500-504 responses in web logs should be recognized as ERROR severity."""
+    assert extract_severity('192.168.1.5 - - "GET /api/checkout HTTP/1.1" 500 1204') == "ERROR"
+    assert extract_severity('10.0.0.2 - - "POST /process HTTP/1.1" 502 210') == "ERROR"
+    assert extract_severity('10.0.0.3 - - "GET /report HTTP/1.1" 503 540') == "ERROR"
+    assert extract_severity('10.0.0.4 - - "GET /slow-query HTTP/1.1" 504 0') == "ERROR"
+    assert extract_severity('10.0.0.1 - - "GET /home HTTP/1.1" 200 4521') is None
+    assert extract_severity('10.0.0.1 - - "GET /missing HTTP/1.1" 404 120') is None
+
+
 def test_classify_event_pattern():
     """Authentication and database patterns should be classified."""
     assert classify_event_pattern("FAILED LOGIN for admin from 10.0.0.1") == "FAILED_LOGIN"
@@ -117,6 +157,15 @@ def test_classify_event_pattern():
     assert classify_event_pattern("PostgreSQL connection refused by backend") == "DATABASE_ERROR"
     assert classify_event_pattern("HTTP connection refused on port 80") is None
     assert classify_event_pattern("Normal system heartbeat") is None
+
+
+def test_classify_event_pattern_http_auth():
+    """HTTP 401 on login endpoints should be classified as FAILED_LOGIN."""
+    line_failed = '192.168.1.50 - - [10/Oct/2026:12:00:00 +0000] "POST /api/login HTTP/1.1" 401 89'
+    assert classify_event_pattern(line_failed) == "FAILED_LOGIN"
+
+    line_success = '192.168.1.50 - - [10/Oct/2026:12:00:00 +0000] "POST /api/login HTTP/1.1" 200 1420'
+    assert classify_event_pattern(line_success) == "SUCCESS_LOGIN"
 
 
 def test_parse_log_line_empty():

@@ -393,7 +393,7 @@ def main():
     with col1:
         render_metric_card("Lines", f"{m.total_lines:,}", "📄", "#38bdf8")
     with col2:
-        render_metric_card("Critical", m.critical_count, "🚨", "#ef4444", delta=f"{m.critical_count} Alert" if m.critical_count else None)
+        render_metric_card("Critical", m.critical_count, "🚨", "#ef4444", delta=f"{m.critical_count} {'Alert' if m.critical_count == 1 else 'Alerts'}" if m.critical_count else None)
     with col3:
         render_metric_card("Errors", m.error_count, "⚠️", "#f97316", delta=f"{m.error_count} Unhandled" if m.error_count else None)
     with col4:
@@ -458,8 +458,10 @@ def main():
             ]
             st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)
         else:
-            # Unified Security Alert Feed
-            for f in filtered:
+            # Unified Security Alert Feed with display cap to prevent browser DOM lag
+            feed_limit = 50
+            displayed = filtered[:feed_limit]
+            for f in displayed:
                 sev_icon = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🔵"}.get(f.severity, "⚪")
                 sev_color = {
                     "CRITICAL": "#ef4444",
@@ -499,6 +501,12 @@ def main():
                     st.markdown("**Supporting Telemetry Lines:**")
                     for ev in f.evidence:
                         st.code(ev, language="text")
+
+            if len(filtered) > feed_limit:
+                st.info(
+                    f"Showing top {feed_limit} of {len(filtered)} findings in Alert Feed to maintain responsive performance. "
+                    "Switch to **Data Table** view above or apply severity/search filters to explore all findings."
+                )
 
     with tab2:
         generate_col, _ = st.columns([1, 3])

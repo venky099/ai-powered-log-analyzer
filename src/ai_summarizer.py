@@ -153,10 +153,12 @@ class GeminiSummarizer:
                 "top_p": 0.9,
                 "max_output_tokens": 2048,
             }
-            try:
-                config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
-            except Exception:
-                pass
+            # Only configure thinking_budget for models supporting thinking modes (e.g., 2.5 / thinking variants)
+            if any(term in self.model.lower() for term in ("2.5", "thinking")):
+                try:
+                    config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+                except Exception:
+                    pass
 
             response = client.models.generate_content(
                 model=self.model,

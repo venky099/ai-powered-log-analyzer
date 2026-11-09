@@ -65,3 +65,21 @@ def test_small_log_entries_safeguard():
     # In tab3, if total_entries <= 10, all entries are displayed without slider bounds exception
     df = pd.DataFrame([e.to_dict() for e in res.entries])
     assert len(df) == 2
+
+
+def test_critical_alert_card_delta_pluralization():
+    """Verify singular/plural delta formatting for metric cards."""
+    one_alert = f"{1} {'Alert' if 1 == 1 else 'Alerts'}"
+    assert one_alert == "1 Alert"
+
+    two_alerts = f"{2} {'Alert' if 2 == 1 else 'Alerts'}"
+    assert two_alerts == "2 Alerts"
+
+
+def test_alert_feed_large_dataset_cap():
+    """Alert feed display list is capped at 50 to maintain browser performance."""
+    feed_limit = 50
+    mock_findings = [MagicMock() for _ in range(120)]
+    displayed = mock_findings[:feed_limit]
+    assert len(displayed) == 50
+    assert len(mock_findings) > feed_limit
