@@ -227,7 +227,7 @@ def classify_event_pattern(text: str) -> Optional[str]:
         if pat.search(text):
             return "SUCCESS_LOGIN"
 
-    if re.search(r"\b(?:database|sql|postgres(?:ql)?|mysql|sqlite|oracle|redis|mongodb|connection refused|deadlock)\b", text, re.IGNORECASE):
+    if re.search(r"\b(?:database|sql|postgres(?:ql)?|mysql|sqlite|oracle|redis|mongodb|db|deadlock)\b", text, re.IGNORECASE):
         if re.search(r"\b(?:error|fail|down|timeout|refused|exception|exhausted|closed|dropped)\b", text, re.IGNORECASE):
             return "DATABASE_ERROR"
 

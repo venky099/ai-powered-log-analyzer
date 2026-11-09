@@ -14,6 +14,7 @@ from src.report_generator import (
 def test_sanitize_csv_cell_formula_injection():
     """Formula trigger characters (=, +, -, @) should be prepended with a single quote."""
     assert _sanitize_csv_cell("=cmd|' /C calc'!A0") == "'=cmd|' /C calc'!A0"
+    assert _sanitize_csv_cell("  =cmd|' /C calc'!A0") == "'  =cmd|' /C calc'!A0"
     assert _sanitize_csv_cell("+12345") == "'+12345"
     assert _sanitize_csv_cell("-secret") == "'-secret"
     assert _sanitize_csv_cell("@SUM(A1:A10)") == "'@SUM(A1:A10)"

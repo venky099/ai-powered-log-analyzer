@@ -27,8 +27,9 @@ def _sanitize_csv_cell(value: str) -> str:
     if not value:
         return ""
     str_val = str(value)
-    # If the string starts with formula triggers, prepend a single quote
-    if str_val and str_val[0] in ("=", "+", "-", "@", "\t", "\r"):
+    # If the string starts with formula triggers (even after leading spaces), prepend a single quote
+    stripped = str_val.lstrip()
+    if stripped and stripped[0] in ("=", "+", "-", "@", "\t", "\r"):
         return "'" + str_val
     return str_val
 

@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 # Ensure .env is loaded on startup
 load_dotenv()
 
-from src.ai_summarizer import GeminiSummarizer, OllamaSummarizer, _load_env_file
+from src.ai_summarizer import GeminiSummarizer
 from src.analyzer import AnalysisResult, LogAnalyzer
 from src.report_generator import generate_csv_report, generate_text_report
 
@@ -29,12 +29,13 @@ from src.report_generator import generate_csv_report, generate_text_report
 DEFAULT_MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "2"))
 DEFAULT_FAILED_LOGIN_THRESHOLD = int(os.getenv("FAILED_LOGIN_THRESHOLD", "3"))
 DEFAULT_GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 GEMINI_POPULAR_MODELS = [
-    "gemini-3.8-flash",
-    "gemini-3.8-pro",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-2.5-pro",
+    "gemini-3.8-flash",
     "Custom...",
 ]
 SAMPLE_LOG_PATH = Path(__file__).parent / "sample_logs" / "sample.log"
@@ -65,6 +66,10 @@ def init_session_state():
         st.session_state.analysis_result = None
     if "ai_summary" not in st.session_state:
         st.session_state.ai_summary = None
+    if "active_bytes" not in st.session_state:
+        st.session_state.active_bytes = None
+    if "active_threshold" not in st.session_state:
+        st.session_state.active_threshold = DEFAULT_FAILED_LOGIN_THRESHOLD
 
 
 def run_analysis(content_bytes: bytes, filename: str, threshold: int):
@@ -246,6 +251,8 @@ def main():
     if clear_data:
         st.session_state.analysis_result = None
         st.session_state.ai_summary = None
+        st.session_state.active_bytes = None
+        st.session_state.active_threshold = DEFAULT_FAILED_LOGIN_THRESHOLD
         st.rerun()
 
     st.sidebar.markdown("---")
@@ -272,7 +279,7 @@ def main():
         """,
         unsafe_allow_html=True,
     )
-        configured_env_key = os.getenv("GEMINI_API_KEY", "").strip()
+    configured_env_key = os.getenv("GEMINI_API_KEY", "").strip()
     gemini_api_key = st.sidebar.text_input(
         "Gemini API Key",
         value=configured_env_key,
@@ -306,11 +313,17 @@ def main():
 
     # Data ingestion handlers
     if load_sample_text and SAMPLE_LOG_PATH.exists():
-        run_analysis(SAMPLE_LOG_PATH.read_bytes(), "sample.log", failed_login_threshold)
+        sample_bytes = SAMPLE_LOG_PATH.read_bytes()
+        st.session_state.active_bytes = sample_bytes
+        st.session_state.active_threshold = failed_login_threshold
+        run_analysis(sample_bytes, "sample.log", failed_login_threshold)
         st.rerun()
 
     if load_sample_json and SAMPLE_JSON_PATH.exists():
-        run_analysis(SAMPLE_JSON_PATH.read_bytes(), "sample_json.jsonl", failed_login_threshold)
+        sample_json_bytes = SAMPLE_JSON_PATH.read_bytes()
+        st.session_state.active_bytes = sample_json_bytes
+        st.session_state.active_threshold = failed_login_threshold
+        run_analysis(sample_json_bytes, "sample_json.jsonl", failed_login_threshold)
         st.rerun()
 
     if uploaded_file is not None:
@@ -324,9 +337,24 @@ def main():
         elif (
             st.session_state.analysis_result is None
             or st.session_state.analysis_result.filename != uploaded_file.name
+            or st.session_state.get("active_threshold") != failed_login_threshold
         ):
+            st.session_state.active_bytes = file_bytes
+            st.session_state.active_threshold = failed_login_threshold
             run_analysis(file_bytes, uploaded_file.name, failed_login_threshold)
             st.rerun()
+    elif (
+        st.session_state.get("active_bytes") is not None
+        and st.session_state.get("analysis_result") is not None
+        and st.session_state.get("active_threshold") != failed_login_threshold
+    ):
+        st.session_state.active_threshold = failed_login_threshold
+        run_analysis(
+            st.session_state.active_bytes,
+            st.session_state.analysis_result.filename,
+            failed_login_threshold,
+        )
+        st.rerun()
 
     result: Optional[AnalysisResult] = st.session_state.analysis_result
 
@@ -347,7 +375,7 @@ def main():
                 <span class="badge-pill">Google Gemini Powered</span>
                 {status_badge}
             </div>
-            <div style="font-size: 0.82rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">
+            <div style="font-size: 0.82rem; color: #94a3b8; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">
                 Target: <span style="color: #f1f5f9; font-weight: 600;">{active_filename}</span>
             </div>
         </div>
@@ -482,8 +510,14 @@ def main():
             st.markdown(st.session_state.ai_summary.summary_text)
 
     with tab3:
-        lines_to_show = st.slider("Display lines limit", 10, max(10, min(1000, len(result.entries))), min(50, len(result.entries)))
-        st.dataframe(pd.DataFrame([e.to_dict() for e in result.entries[:lines_to_show]]), use_container_width=True, hide_index=True)
+        total_entries = len(result.entries)
+        if total_entries <= 10:
+            st.dataframe(pd.DataFrame([e.to_dict() for e in result.entries]), use_container_width=True, hide_index=True)
+        else:
+            max_limit = min(1000, total_entries)
+            default_limit = min(50, total_entries)
+            lines_to_show = st.slider("Display lines limit", min_value=10, max_value=max_limit, value=default_limit)
+            st.dataframe(pd.DataFrame([e.to_dict() for e in result.entries[:lines_to_show]]), use_container_width=True, hide_index=True)
 
     with tab4:
         summary_val = st.session_state.ai_summary.summary_text if st.session_state.ai_summary else "N/A"

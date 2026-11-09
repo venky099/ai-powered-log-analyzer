@@ -62,7 +62,7 @@ class GeminiSummarizer:
             self.api_key = api_key.strip()
         else:
             self.api_key = os.getenv("GEMINI_API_KEY", "").strip()
-        self.model = model or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+        self.model = model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         env_timeout = os.getenv("GEMINI_TIMEOUT_SECONDS", "120")
         try:
             self.timeout = timeout_seconds if timeout_seconds is not None else int(env_timeout)

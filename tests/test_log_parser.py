@@ -115,6 +115,7 @@ def test_classify_event_pattern():
     assert classify_event_pattern("Authentication failed for user bob") == "FAILED_LOGIN"
     assert classify_event_pattern("User alice successful login") == "SUCCESS_LOGIN"
     assert classify_event_pattern("PostgreSQL connection refused by backend") == "DATABASE_ERROR"
+    assert classify_event_pattern("HTTP connection refused on port 80") is None
     assert classify_event_pattern("Normal system heartbeat") is None
 
 
