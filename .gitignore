@@ -33,3 +33,6 @@ reports/
 # OS temporary files
 .DS_Store
 Thumbs.db
+
+# Local task / prompt notes
+follow.md
